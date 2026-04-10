@@ -1,0 +1,9 @@
+CREATE TABLE `user_exp` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '经验ID',
+  `user_id` BIGINT UNSIGNED NOT NULL COMMENT '用户ID',
+  `exp` INT NOT NULL COMMENT '经验值',
+  `reason` VARCHAR(100) NOT NULL COMMENT '获得原因',
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户经验记录表';

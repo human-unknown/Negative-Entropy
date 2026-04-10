@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: negentropy-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password_change_me
+      MYSQL_DATABASE: negentropy_production
+      MYSQL_USER: negentropy_prod
+      MYSQL_PASSWORD: db_password_change_me
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/sql:/docker-entrypoint-initdb.d
+    ports:
+      - "3306:3306"
+    networks:
+      - negentropy-network
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    container_name: negentropy-backend
+    environment:
+      PORT: 3000
+      DB_HOST: mysql
+      DB_USER: negentropy_prod
+      DB_PASSWORD: db_password_change_me
+      DB_NAME: negentropy_production
+      JWT_SECRET: prod-jwt-secret-change-me
+      NODE_ENV: production
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mysql
+    networks:
+      - negentropy-network
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: negentropy-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - negentropy-network
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+
+networks:
+  negentropy-network:
+    driver: bridge

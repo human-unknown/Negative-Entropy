@@ -1,0 +1,7 @@
+# Crontab 配置
+
+# 每天凌晨 2 点备份数据库
+0 2 * * * /app/backend/scripts/backup_production.sh
+
+# 每 5 分钟健康检查
+*/5 * * * * /app/backend/scripts/health_check.sh

@@ -128,7 +128,7 @@ const getCategoryLabel = (cat) => categoryLabels[cat] || cat
 const getStatusLabel = (status) => statusLabels[status] || '未知'
 
 const goToDebate = (id) => {
-  router.push(`/debates/${id}`)
+  router.push(`/debates/flow?topicId=${id}`)
 }
 
 const formatTime = (time) => {

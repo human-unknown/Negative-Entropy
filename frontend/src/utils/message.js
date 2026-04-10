@@ -7,5 +7,7 @@ export const message = {
   info: (msg) => ElMessage.info(msg)
 }
 
-export const confirm = (msg, title = '确认') => 
+export const showMessage = message
+
+export const confirm = (msg, title = '确认') =>
   ElMessageBox.confirm(msg, title, { type: 'warning' })

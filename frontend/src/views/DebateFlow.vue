@@ -85,13 +85,15 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import StanceSelector from '@/components/StanceSelector.vue'
 import SpeechInput from '@/components/SpeechInput.vue'
 import AudienceInput from '@/components/AudienceInput.vue'
 import SpeechList from '@/components/SpeechList.vue'
-import { getSpeeches } from '@/api/debate'
+import { getSpeeches, getDebateDetail } from '@/api/debate'
 
+const route = useRoute()
 const step = ref(1)
 const userStance = ref(null)
 const proCount = ref(0)
@@ -100,7 +102,7 @@ const audienceCount = ref(0)
 const pendingCount = ref(0)
 
 const mockTopic = ref({
-  id: 1,
+  id: parseInt(route.query.topicId) || 1,
   title: '人工智能是否会取代人类工作？',
   pro_limit: 5,
   con_limit: 5,
@@ -138,8 +140,8 @@ const refreshSpeeches = async () => {
   try {
     const res = await getSpeeches(mockTopic.value.id)
     if (res.code === 200) {
-      speeches.value = res.data
-      ElMessage.success(`已刷新，共${res.data.length}条发言`)
+      speeches.value = res.data.list || res.data || []
+      ElMessage.success(`已刷新，共${speeches.value.length}条发言`)
     }
   } catch (err) {
     console.error('刷新发言失败:', err)
@@ -158,7 +160,17 @@ const resetFlow = () => {
   ElMessage.info('流程已重置')
 }
 
-onMounted(() => {
+onMounted(async () => {
+  if (route.query.topicId) {
+    try {
+      const res = await getDebateDetail(route.query.topicId)
+      if (res.code === 200) {
+        mockTopic.value = res.data
+      }
+    } catch (err) {
+      console.error('加载辩论详情失败:', err)
+    }
+  }
   refreshSpeeches()
 })
 </script>

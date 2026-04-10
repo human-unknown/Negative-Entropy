@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 import { USER_LEVEL } from '@/constants/userLevel'
 
 const routes = [
@@ -56,12 +56,6 @@ const routes = [
     meta: { requiresAuth: true, minLevel: USER_LEVEL.BEGINNER }
   },
   {
-    path: '/test/vote-settle',
-    name: 'VoteSettleTest',
-    component: () => import('@/views/VoteSettleTest.vue'),
-    meta: { requiresAuth: true, minLevel: USER_LEVEL.BEGINNER }
-  },
-  {
     path: '/admin',
     name: 'Admin',
     component: () => import('@/views/Admin.vue'),
@@ -70,7 +64,7 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHashHistory(),
   routes
 })
 

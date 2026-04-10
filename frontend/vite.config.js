@@ -4,18 +4,25 @@ import { resolve } from 'path'
 
 export default defineConfig({
   plugins: [vue()],
+  base: './',
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src')
     }
   },
   server: {
-    port: 3000,
+    port: 5173,
+    host: '0.0.0.0',
+    open: true,
     proxy: {
       '/api': {
         target: 'http://localhost:5000',
         changeOrigin: true
       }
     }
+  },
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets'
   }
 })

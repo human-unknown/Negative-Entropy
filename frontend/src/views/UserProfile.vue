@@ -13,35 +13,35 @@
             <li
               class="nav-item"
               :class="{ active: activeTab === 'info' }"
-              @click="activeTab = 'info'"
+              @click="switchTab('info')"
             >
               <span class="nav-text">基本信息</span>
             </li>
             <li
               class="nav-item"
               :class="{ active: activeTab === 'debates' }"
-              @click="activeTab = 'debates'"
+              @click="switchTab('debates')"
             >
               <span class="nav-text">我的辩论</span>
             </li>
             <li
               class="nav-item"
               :class="{ active: activeTab === 'stats' }"
-              @click="activeTab = 'stats'"
+              @click="switchTab('stats')"
             >
               <span class="nav-text">数据统计</span>
             </li>
             <li
               class="nav-item"
               :class="{ active: activeTab === 'security' }"
-              @click="activeTab = 'security'"
+              @click="switchTab('security')"
             >
               <span class="nav-text">账号安全</span>
             </li>
             <li
               class="nav-item"
               :class="{ active: activeTab === 'settings' }"
-              @click="activeTab = 'settings'"
+              @click="switchTab('settings')"
             >
               <span class="nav-text">系统设置</span>
             </li>
@@ -51,13 +51,19 @@
 
       <main class="profile-main">
         <div class="content-wrapper">
-          <SecuritySettings v-if="activeTab === 'security'" />
-          <div
-            v-else
-            class="placeholder"
-          >
-            {{ activeTab }} 功能开发中...
-          </div>
+          <UserInfoDisplay
+            v-if="activeTab === 'info'"
+            :username="userInfo.name"
+            :level="userInfo.level"
+            :current-exp="userInfo.exp"
+            :max-exp="levelInfo.nextThreshold || 500"
+            :register-time="userInfo.created_at"
+            status="normal"
+          />
+          <UserDebates v-else-if="activeTab === 'debates'" />
+          <UserStats v-else-if="activeTab === 'stats'" />
+          <SecuritySettings v-else-if="activeTab === 'security'" />
+          <UserProfileSettings v-else-if="activeTab === 'settings'" />
         </div>
       </main>
     </div>
@@ -65,10 +71,55 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import SecuritySettings from '../components/SecuritySettings.vue'
+import UserInfoDisplay from '../components/UserInfoDisplay.vue'
+import UserDebates from '../components/UserDebates.vue'
+import UserStats from '../components/UserStats.vue'
+import UserProfileSettings from '../components/UserProfileSettings.vue'
+import request from '@/api/request'
 
-const activeTab = ref('security')
+const route = useRoute()
+const router = useRouter()
+const activeTab = ref(route.query.tab || 'info')
+const userInfo = ref({ name: '', level: 1, exp: 0, created_at: '' })
+const levelInfo = ref({ nextThreshold: 500 })
+
+const switchTab = (tab) => {
+  activeTab.value = tab
+  router.replace({ query: { tab } })
+}
+
+onMounted(async () => {
+  // 从 localStorage 获取基础信息
+  const userStr = localStorage.getItem('user')
+  if (userStr) {
+    try {
+      const user = JSON.parse(userStr)
+      userInfo.value = user
+    } catch {}
+  }
+
+  // 获取等级信息
+  try {
+    const res = await request.get('/api/user/level')
+    if (res.code === 200) {
+      levelInfo.value = res.data
+      userInfo.value.level = res.data.level
+      userInfo.value.exp = res.data.exp
+    }
+  } catch (err) {
+    console.error('获取等级信息失败', err)
+  }
+})
+
+// 监听路由 query 变化，支持外部导航（如 /profile?tab=security）
+watch(() => route.query.tab, (newTab) => {
+  if (newTab && newTab !== activeTab.value) {
+    activeTab.value = newTab
+  }
+})
 </script>
 
 <style scoped>

@@ -8,7 +8,10 @@
       <p>逆熵</p>
     </div>
     <ErrorBoundary v-else-if="!mountedError">
-      <router-view />
+      <AppLayout v-if="route.meta.requiresLayout">
+        <router-view />
+      </AppLayout>
+      <router-view v-else />
     </ErrorBoundary>
     <div
       v-else
@@ -27,8 +30,11 @@
 
 <script setup>
 import { ref, onMounted, onErrorCaptured } from 'vue'
+import { useRoute } from 'vue-router'
 import ErrorBoundary from '@/components/ErrorBoundary.vue'
+import AppLayout from '@/components/AppLayout.vue'
 
+const route = useRoute()
 const loading = ref(true)
 const mountedError = ref(null)
 

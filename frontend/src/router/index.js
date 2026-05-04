@@ -21,60 +21,67 @@ const routes = [
     path: '/profile',
     name: 'UserProfile',
     component: () => import('@/views/UserProfile.vue'),
-    meta: { requiresAuth: true, minLevel: USER_LEVEL.BEGINNER }
+    meta: { requiresAuth: true, minLevel: USER_LEVEL.BEGINNER, requiresLayout: true }
   },
   {
     path: '/check/logic',
     name: 'CheckLogic',
-    component: () => import('@/views/CheckLogic.vue')
+    component: () => import('@/views/CheckLogic.vue'),
+    meta: { requiresLayout: true }
   },
   {
     path: '/check/debate',
     name: 'CheckDebate',
-    component: () => import('@/views/CheckDebate.vue')
+    component: () => import('@/views/CheckDebate.vue'),
+    meta: { requiresLayout: true }
   },
   {
     path: '/check/result',
     name: 'CheckResult',
-    component: () => import('@/views/CheckResult.vue')
+    component: () => import('@/views/CheckResult.vue'),
+    meta: { requiresLayout: true }
   },
   {
     path: '/debates',
     name: 'DebateList',
-    component: () => import('@/views/DebateList.vue')
+    component: () => import('@/views/DebateList.vue'),
+    meta: { requiresLayout: true }
   },
   {
     path: '/debates/create',
     name: 'DebateCreate',
     component: () => import('@/views/DebateCreate.vue'),
-    meta: { requiresAuth: true, minLevel: USER_LEVEL.ADVANCED }
+    meta: { requiresAuth: true, minLevel: USER_LEVEL.ADVANCED, requiresLayout: true }
   },
   {
     path: '/debates/flow',
     name: 'DebateFlow',
     component: () => import('@/views/DebateFlow.vue'),
-    meta: { requiresAuth: true, minLevel: USER_LEVEL.BEGINNER }
+    meta: { requiresAuth: true, minLevel: USER_LEVEL.BEGINNER, requiresLayout: true }
   },
   {
     path: '/admin',
     name: 'Admin',
     component: () => import('@/views/Admin.vue'),
-    meta: { requiresAuth: true, requiresAdmin: true }
+    meta: { requiresAuth: true, requiresAdmin: true, requiresLayout: true }
   },
   {
     path: '/rules',
     name: 'RuleDebateList',
-    component: () => import('@/views/RuleDebateList.vue')
+    component: () => import('@/views/RuleDebateList.vue'),
+    meta: { requiresLayout: true }
   },
   {
     path: '/rules/debate/:id',
     name: 'RuleDebateDetail',
-    component: () => import('@/views/RuleDebateDetail.vue')
+    component: () => import('@/views/RuleDebateDetail.vue'),
+    meta: { requiresLayout: true }
   },
   {
     path: '/rules/history',
     name: 'RuleHistoryPage',
-    component: () => import('@/views/RuleHistoryPage.vue')
+    component: () => import('@/views/RuleHistoryPage.vue'),
+    meta: { requiresLayout: true }
   }
 ]
 

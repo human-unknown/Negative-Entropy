@@ -92,6 +92,20 @@ const handleMockRequest = async (config) => {
     if (url.includes('/rule-debates') && method === 'post') return mockApi.createRuleDebate(data)
     return { code: 200, data: {}, message: '规则操作成功' }
   }
+
+  // 通知系统
+  if (url.includes('/notification/unread-count')) return mockApi.getUnreadCount()
+  if (url.includes('/notification') && method === 'get') return mockApi.getNotifications(params)
+  if (url.match(/\/notification\/\d+\/read/) && method === 'put') {
+    const id = url.match(/\/notification\/(\d+)/)[1]
+    return mockApi.markAsRead(id)
+  }
+  if (url.includes('/notification/read-all') && method === 'put') return mockApi.markAllAsRead()
+
+  // 用户数据
+  if (url.includes('/user/debates')) return mockApi.getUserDebates(params)
+  if (url.includes('/user/exp')) return mockApi.getExpHistory(params)
+  if (url.includes('/user/level')) return mockApi.getLevelInfo()
   
   return { code: 200, data: {}, message: 'Mock响应' }
 }

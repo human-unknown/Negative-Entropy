@@ -66,6 +66,8 @@ import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import request from '../api/request'
 
+const emit = defineEmits(['close'])
+
 const form = ref({
   type: '',
   content: '',
@@ -85,6 +87,7 @@ const handleSubmit = async () => {
     if (response.code === 200) {
       ElMessage.success('反馈提交成功，感谢您的支持！')
       form.value = { type: '', content: '', contact: '' }
+      emit('close')
     } else {
       ElMessage.error(response.message || '提交失败')
     }

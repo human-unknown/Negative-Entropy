@@ -89,6 +89,20 @@ const initMockData = () => {
 
 initMockData()
 
+// 通知 Mock 数据
+let mockNotificationId = 0
+let mockNotifications = []
+const initMockNotifications = () => {
+  mockNotifications = [
+    { id: ++mockNotificationId, type: 'debate_settled', content: 'AI是否会取代人类工作辩论已结算', is_read: 0, created_at: new Date(Date.now() - 120000).toISOString() },
+    { id: ++mockNotificationId, type: 'debate_reply', content: '李四回复了你在"远程办公"中的发言', is_read: 0, created_at: new Date(Date.now() - 600000).toISOString() },
+    { id: ++mockNotificationId, type: 'vote_result', content: '你参与的"传统文化"辩论投票已完成', is_read: 1, created_at: new Date(Date.now() - 86400000).toISOString() },
+    { id: ++mockNotificationId, type: 'system', content: '欢迎加入逆熵，请完善个人资料', is_read: 0, created_at: new Date(Date.now() - 172800000).toISOString() },
+    { id: ++mockNotificationId, type: 'punishment', content: '您的发言因违规被系统警告', is_read: 1, created_at: new Date(Date.now() - 259200000).toISOString() }
+  ]
+}
+initMockNotifications()
+
 let mockRules = null
 const mockRuleDebates = []
 let currentRuleDebateId = 0
@@ -361,5 +375,90 @@ export const mockApi = {
     }
     mockRuleDebates.push(debate)
     return { code: 200, data: { debateId: debate.id } }
+  },
+
+  // ---- 通知系统 ----
+
+  // 获取通知列表
+  getNotifications: async (params) => {
+    const page = params?.page || 1
+    const limit = params?.limit || 10
+    let list = [...mockNotifications]
+    if (params?.unreadOnly === 'true' || params?.unreadOnly === '1') {
+      list = list.filter(n => n.is_read === 0)
+    }
+    const start = (page - 1) * limit
+    const end = start + limit
+    return { code: 200, data: { list: list.slice(start, end), total: list.length, page, limit } }
+  },
+
+  // 获取未读数量
+  getUnreadCount: async () => {
+    const count = mockNotifications.filter(n => n.is_read === 0).length
+    return { code: 200, data: { count } }
+  },
+
+  // 标记单条已读
+  markAsRead: async (id) => {
+    const item = mockNotifications.find(n => n.id === parseInt(id))
+    if (item) item.is_read = 1
+    return { code: 200, message: '已标记为已读' }
+  },
+
+  // 标记全部已读
+  markAllAsRead: async () => {
+    mockNotifications.forEach(n => { n.is_read = 1 })
+    return { code: 200, message: '全部标记为已读' }
+  },
+
+  // ---- 用户数据 ----
+
+  // 获取我的辩论列表
+  getUserDebates: async (params) => {
+    const page = params?.page || 1
+    const limit = params?.limit || 10
+    const list = mockDebates.map(d => ({
+      id: d.id,
+      title: d.title,
+      status: d.status,
+      stance: d.id % 2 === 0 ? 1 : 0,
+      created_at: d.created_at,
+      winner: d.status === 2 ? (d.id % 2 === 0 ? 'pro' : 'con') : null
+    }))
+    const start = (page - 1) * limit
+    const end = start + limit
+    return { code: 200, data: { debates: list.slice(start, end), total: list.length, page, limit } }
+  },
+
+  // 获取经验记录
+  getExpHistory: async (params) => {
+    const page = params?.page || 1
+    const limit = params?.limit || 20
+    const entries = [
+      { id: 1, exp: 50, reason: '辩论结算奖励', created_at: new Date(Date.now() - 86400000).toISOString() },
+      { id: 2, exp: 20, reason: '发言奖励', created_at: new Date(Date.now() - 172800000).toISOString() },
+      { id: 3, exp: -10, reason: '违规扣分', created_at: new Date(Date.now() - 259200000).toISOString() },
+      { id: 4, exp: 30, reason: '逻辑测试通过', created_at: new Date(Date.now() - 345600000).toISOString() }
+    ]
+    const start = (page - 1) * limit
+    const end = start + limit
+    return { code: 200, data: { list: entries.slice(start, end), total: entries.length, page, limit } }
+  },
+
+  // 获取等级信息
+  getLevelInfo: async () => {
+    const userStr = localStorage.getItem('user')
+    const user = userStr ? JSON.parse(userStr) : { level: 1, exp: 0 }
+    return {
+      code: 200,
+      data: {
+        level: user.level,
+        exp: user.exp,
+        currentThreshold: 0,
+        nextThreshold: user.level >= 3 ? null : (user.level === 1 ? 500 : 1000),
+        nextLevelName: user.level >= 3 ? null : (user.level === 1 ? '进阶级' : '资深级'),
+        progress: user.level >= 3 ? 100 : Math.min(Math.round((user.exp / (user.level === 1 ? 500 : 1000)) * 100), 100)
+      }
+    }
   }
 }

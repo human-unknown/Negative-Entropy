@@ -54,6 +54,14 @@
         >{{ errors.category }}</span>
       </div>
 
+      <div class="form-item">
+        <DebateTemplateSelector v-model="form.templateId" />
+        <span
+          v-if="form.templateId"
+          class="template-hint"
+        >已选择模板辩论，人数限制将由模板自动设置</span>
+      </div>
+
       <div class="form-row">
         <div class="form-item">
           <label>正方人数上限 *</label>
@@ -106,6 +114,7 @@ import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { createDebate } from '@/api/debate'
 import { ElMessage } from 'element-plus'
+import DebateTemplateSelector from '@/components/DebateTemplateSelector.vue'
 
 const router = useRouter()
 
@@ -114,7 +123,8 @@ const form = reactive({
   description: '',
   category: '',
   pro_limit: 5,
-  con_limit: 5
+  con_limit: 5,
+  templateId: null
 })
 
 const errors = reactive({})
@@ -238,6 +248,13 @@ textarea {
   display: block;
   margin-top: 5px;
   color: var(--color-danger);
+  font-size: 12px;
+}
+
+.template-hint {
+  display: block;
+  margin-top: 8px;
+  color: var(--color-text-secondary);
   font-size: 12px;
 }
 

@@ -15,6 +15,8 @@ import reportRoutes from './routes/reportRoutes.js'
 import auditRoutes from './routes/auditRoutes.js'
 import notificationRoutes from './routes/notificationRoutes.js'
 import systemRoutes from './routes/systemRoutes.js'
+import templateRoutes from './routes/templateRoutes.js'
+import scoreRoutes from './routes/scoreRoutes.js'
 
 const app = express()
 
@@ -44,6 +46,8 @@ app.use('/api/report', reportRoutes)
 app.use('/api/audit', auditRoutes)
 app.use('/api/notification', notificationRoutes)
 app.use('/api/system', systemRoutes)
+app.use('/api/debate/templates', templateRoutes)
+app.use('/api/debate', scoreRoutes)
 
 // 错误处理
 app.use(errorHandler)

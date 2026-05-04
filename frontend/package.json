@@ -5,19 +5,33 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint \"src\" --ext .vue,.js --max-warnings 100",
+    "lint:fix": "eslint \"src\" --ext .vue,.js --fix",
+    "format": "prettier --write \"src/**/*.{vue,js,css}\"",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
-    "vue": "^3.4.0",
-    "vue-router": "^4.3.0",
-    "pinia": "^2.1.0",
     "axios": "^1.6.0",
-    "element-plus": "^2.6.0"
+    "element-plus": "^2.6.0",
+    "pinia": "^2.1.0",
+    "vue": "^3.4.0",
+    "vue-router": "^4.3.0"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.5.3",
+    "@commitlint/config-conventional": "^20.5.3",
     "@vitejs/plugin-vue": "^5.0.0",
-    "vite": "^5.1.0",
+    "@vue/test-utils": "^2.4.10",
     "eslint": "^8.57.0",
-    "prettier": "^3.2.0"
+    "eslint-plugin-vue": "^9.23.0",
+    "husky": "^9.1.7",
+    "jsdom": "^29.1.1",
+    "lint-staged": "^16.4.0",
+    "prettier": "^3.2.0",
+    "vite": "^5.1.0",
+    "vitest": "^4.1.5",
+    "vue-eslint-parser": "^9.4.0"
   }
 }

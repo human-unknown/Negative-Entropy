@@ -7,13 +7,24 @@
       </div>
     </div>
 
-    <div v-if="loading" class="loading">加载中...</div>
+    <div
+      v-if="loading"
+      class="loading"
+    >
+      加载中...
+    </div>
 
-    <div v-else-if="reviewList.length === 0" class="empty">
+    <div
+      v-else-if="reviewList.length === 0"
+      class="empty"
+    >
       <p>暂无待复核内容</p>
     </div>
 
-    <div v-else class="review-list">
+    <div
+      v-else
+      class="review-list"
+    >
       <div
         v-for="item in reviewList"
         :key="item.id"
@@ -21,7 +32,10 @@
       >
         <div class="item-header">
           <div class="meta">
-            <span class="type-tag" :class="`type-${item.content_type}`">
+            <span
+              class="type-tag"
+              :class="`type-${item.content_type}`"
+            >
               {{ getContentTypeLabel(item.content_type) }}
             </span>
             <span class="user">用户: {{ item.username || `ID:${item.user_id}` }}</span>
@@ -33,12 +47,21 @@
         </div>
 
         <div class="item-content">
-          <div class="content-label">待审核内容：</div>
-          <div class="content-text">{{ item.content }}</div>
+          <div class="content-label">
+            待审核内容：
+          </div>
+          <div class="content-text">
+            {{ item.content }}
+          </div>
         </div>
 
-        <div v-if="item.violations" class="violations">
-          <div class="violations-label">AI检测到的违规点：</div>
+        <div
+          v-if="item.violations"
+          class="violations"
+        >
+          <div class="violations-label">
+            AI检测到的违规点：
+          </div>
           <div class="violations-tags">
             <span
               v-for="violation in parseViolations(item.violations)"
@@ -50,9 +73,16 @@
           </div>
         </div>
 
-        <div v-if="item.audit_reason" class="reason">
-          <div class="reason-label">AI审核原因：</div>
-          <div class="reason-text">{{ item.audit_reason }}</div>
+        <div
+          v-if="item.audit_reason"
+          class="reason"
+        >
+          <div class="reason-label">
+            AI审核原因：
+          </div>
+          <div class="reason-text">
+            {{ item.audit_reason }}
+          </div>
         </div>
 
         <div class="item-actions">
@@ -74,7 +104,10 @@
       </div>
     </div>
 
-    <div v-if="total > limit" class="pagination">
+    <div
+      v-if="total > limit"
+      class="pagination"
+    >
       <button
         :disabled="page === 1"
         @click="changePage(page - 1)"
@@ -91,11 +124,20 @@
     </div>
 
     <!-- 驳回对话框 -->
-    <div v-if="rejectDialog.visible" class="modal" @click.self="closeRejectDialog">
+    <div
+      v-if="rejectDialog.visible"
+      class="modal"
+      @click.self="closeRejectDialog"
+    >
       <div class="modal-content">
         <div class="modal-header">
           <h3>驳回内容</h3>
-          <button class="close-btn" @click="closeRejectDialog">×</button>
+          <button
+            class="close-btn"
+            @click="closeRejectDialog"
+          >
+            ×
+          </button>
         </div>
         <div class="modal-body">
           <div class="form-group">
@@ -116,7 +158,12 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn-cancel" @click="closeRejectDialog">取消</button>
+          <button
+            class="btn-cancel"
+            @click="closeRejectDialog"
+          >
+            取消
+          </button>
           <button
             class="btn-confirm"
             :disabled="!rejectDialog.reason.trim()"
@@ -132,6 +179,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import request from '@/api/request'
 
 const loading = ref(false)
@@ -203,7 +251,7 @@ const loadReviewQueue = async () => {
     total.value = res.data.total
   } catch (error) {
     console.error('加载复核列表失败:', error)
-    alert('加载失败，请重试')
+    ElMessage.error('加载失败，请重试')
   } finally {
     loading.value = false
   }
@@ -211,7 +259,11 @@ const loadReviewQueue = async () => {
 
 // 通过复核
 const handleApprove = async (item) => {
-  if (!confirm('确认通过此内容？')) return
+  try {
+    await ElMessageBox.confirm('确认通过此内容？', '提示', { type: 'warning', confirmButtonText: '确认', cancelButtonText: '取消' })
+  } catch {
+    return
+  }
 
   item.processing = true
   try {
@@ -221,11 +273,11 @@ const handleApprove = async (item) => {
       data: {}
     })
 
-    alert('已通过')
+    ElMessage.success('已通过')
     loadReviewQueue()
   } catch (error) {
     console.error('通过复核失败:', error)
-    alert('操作失败，请重试')
+    ElMessage.error('操作失败，请重试')
     item.processing = false
   }
 }
@@ -255,7 +307,7 @@ const handleReject = async () => {
   const { item, reason, note } = rejectDialog.value
 
   if (!reason.trim()) {
-    alert('请输入驳回原因')
+    ElMessage.warning('请输入驳回原因')
     return
   }
 
@@ -267,12 +319,12 @@ const handleReject = async () => {
       data: { reason, note }
     })
 
-    alert('已驳回')
+    ElMessage.success('已驳回')
     closeRejectDialog()
     loadReviewQueue()
   } catch (error) {
     console.error('驳回复核失败:', error)
-    alert('操作失败，请重试')
+    ElMessage.error('操作失败，请重试')
     item.processing = false
   }
 }

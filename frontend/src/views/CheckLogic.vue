@@ -2,28 +2,64 @@
   <div class="check-page">
     <div class="check-container">
       <h1>逻辑测试</h1>
-      <p class="desc">请完成以下逻辑题（需答对3题以上）</p>
+      <p class="desc">
+        请完成以下逻辑题（需答对3题以上）
+      </p>
       
-      <div v-if="!submitted" class="questions">
-        <div v-for="(q, idx) in questions" :key="idx" class="question-item">
-          <p class="question-text">{{ idx + 1 }}. {{ q.question }}</p>
+      <div
+        v-if="!submitted"
+        class="questions"
+      >
+        <div
+          v-for="(q, idx) in questions"
+          :key="idx"
+          class="question-item"
+        >
+          <p class="question-text">
+            {{ idx + 1 }}. {{ q.question }}
+          </p>
           <div class="options">
-            <label v-for="(opt, i) in q.options" :key="i" class="option-label">
-              <input type="radio" :name="`q${idx}`" :value="i" v-model="answers[idx]" />
+            <label
+              v-for="(opt, i) in q.options"
+              :key="i"
+              class="option-label"
+            >
+              <input
+                v-model="answers[idx]"
+                type="radio"
+                :name="`q${idx}`"
+                :value="i"
+              >
               <span>{{ opt }}</span>
             </label>
           </div>
         </div>
-        <button @click="submit" :disabled="!canSubmit || loading" class="submit-btn">
+        <button
+          :disabled="!canSubmit || loading"
+          class="submit-btn"
+          @click="submit"
+        >
           {{ loading ? '提交中...' : '提交答案' }}
         </button>
       </div>
       
-      <div v-else class="result">
+      <div
+        v-else
+        class="result"
+      >
         <h2>测试结果</h2>
-        <p class="score">得分：{{ result.score }}分</p>
-        <p class="correct">答对：{{ result.correct }}/{{ result.total }}题</p>
-        <button @click="nextStep" class="next-btn">下一步：AI辩论考核</button>
+        <p class="score">
+          得分：{{ result.score }}分
+        </p>
+        <p class="correct">
+          答对：{{ result.correct }}/{{ result.total }}题
+        </p>
+        <button
+          class="next-btn"
+          @click="nextStep"
+        >
+          下一步：AI辩论考核
+        </button>
       </div>
     </div>
   </div>
@@ -31,6 +67,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
 import { useRouter, useRoute } from 'vue-router'
 import request from '@/api/request'
 
@@ -55,7 +92,7 @@ onMounted(async () => {
       questions.value = res.data.questions
     }
   } catch (error) {
-    alert('加载题目失败')
+    ElMessage.error('加载题目失败')
   }
 })
 
@@ -76,10 +113,10 @@ const submit = async () => {
       result.value = res.data
       submitted.value = true
     } else {
-      alert(res.message || '提交失败')
+      ElMessage.error(res.message || '提交失败')
     }
   } catch (error) {
-    alert('提交失败，请重试')
+    ElMessage.error('提交失败，请重试')
   } finally {
     loading.value = false
   }

@@ -1,22 +1,47 @@
 <template>
   <div class="report-modal">
-    <div class="modal-overlay" @click="$emit('close')"></div>
+    <div
+      class="modal-overlay"
+      @click="$emit('close')"
+    />
     <div class="modal-content">
       <div class="modal-header">
-        <h3 class="modal-title">举报</h3>
-        <button class="close-btn" @click="$emit('close')">×</button>
+        <h3 class="modal-title">
+          举报
+        </h3>
+        <button
+          class="close-btn"
+          @click="$emit('close')"
+        >
+          ×
+        </button>
       </div>
 
       <div class="modal-body">
         <div class="form-group">
           <label class="form-label">举报类型</label>
-          <select v-model="reportType" class="form-select">
-            <option value="">请选择举报类型</option>
-            <option value="spam">垃圾信息</option>
-            <option value="abuse">辱骂攻击</option>
-            <option value="inappropriate">不当内容</option>
-            <option value="false">虚假信息</option>
-            <option value="other">其他</option>
+          <select
+            v-model="reportType"
+            class="form-select"
+          >
+            <option value="">
+              请选择举报类型
+            </option>
+            <option value="spam">
+              垃圾信息
+            </option>
+            <option value="abuse">
+              辱骂攻击
+            </option>
+            <option value="inappropriate">
+              不当内容
+            </option>
+            <option value="false">
+              虚假信息
+            </option>
+            <option value="other">
+              其他
+            </option>
           </select>
         </div>
 
@@ -28,13 +53,20 @@
             placeholder="请详细描述举报理由"
             maxlength="500"
             rows="5"
-          ></textarea>
-          <div class="char-count">{{ reason.length }}/500</div>
+          />
+          <div class="char-count">
+            {{ reason.length }}/500
+          </div>
         </div>
       </div>
 
       <div class="modal-footer">
-        <button class="btn-cancel" @click="$emit('close')">取消</button>
+        <button
+          class="btn-cancel"
+          @click="$emit('close')"
+        >
+          取消
+        </button>
         <button 
           class="btn-submit" 
           :disabled="!canSubmit || submitting"

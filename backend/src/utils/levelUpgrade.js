@@ -1,4 +1,3 @@
-import pool from '../config/database.js'
 import { LEVEL_THRESHOLDS } from '../constants/levelThresholds.js'
 
 export const checkAndUpgradeLevel = async (userId, conn) => {

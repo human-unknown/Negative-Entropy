@@ -4,17 +4,26 @@
       <h2>🏆 辩论结果</h2>
     </div>
 
-    <div v-if="result.winner" class="winner-section">
+    <div
+      v-if="result.winner"
+      class="winner-section"
+    >
       <div :class="['winner-badge', result.winner === 1 ? 'pro' : 'con']">
-        <div class="trophy">🏆</div>
-        <div class="winner-text">{{ result.winner === 1 ? '正方' : '反方' }}获胜</div>
+        <div class="trophy">
+          🏆
+        </div>
+        <div class="winner-text">
+          {{ result.winner === 1 ? '正方' : '反方' }}获胜
+        </div>
       </div>
       <div class="vote-stats">
         <div class="stat-item pro">
           <span class="label">正方票数</span>
           <span class="count">{{ result.pro_votes }}</span>
         </div>
-        <div class="vs">VS</div>
+        <div class="vs">
+          VS
+        </div>
         <div class="stat-item con">
           <span class="label">反方票数</span>
           <span class="count">{{ result.con_votes }}</span>
@@ -22,8 +31,13 @@
       </div>
     </div>
 
-    <div v-else class="tie-section">
-      <div class="tie-icon">⚖️</div>
+    <div
+      v-else
+      class="tie-section"
+    >
+      <div class="tie-icon">
+        ⚖️
+      </div>
       <h3>平票</h3>
       <p>正方 {{ result.pro_votes }} : {{ result.con_votes }} 反方</p>
       <div class="admin-review">
@@ -32,9 +46,14 @@
       </div>
     </div>
 
-    <div v-if="result.summary" class="summary-section">
+    <div
+      v-if="result.summary"
+      class="summary-section"
+    >
       <h3>📝 核心观点总结</h3>
-      <p class="summary-text">{{ result.summary }}</p>
+      <p class="summary-text">
+        {{ result.summary }}
+      </p>
     </div>
   </div>
 </template>

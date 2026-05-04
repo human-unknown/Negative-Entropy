@@ -2,31 +2,55 @@
   <div class="data-stats">
     <div class="stats-grid">
       <div class="stat-card">
-        <div class="stat-icon">👥</div>
+        <div class="stat-icon">
+          👥
+        </div>
         <div class="stat-info">
-          <div class="stat-value">{{ stats.activeUsers }}</div>
-          <div class="stat-label">活跃用户</div>
+          <div class="stat-value">
+            {{ stats.activeUsers }}
+          </div>
+          <div class="stat-label">
+            活跃用户
+          </div>
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon">💬</div>
+        <div class="stat-icon">
+          💬
+        </div>
         <div class="stat-info">
-          <div class="stat-value">{{ stats.topics }}</div>
-          <div class="stat-label">话题总数</div>
+          <div class="stat-value">
+            {{ stats.topics }}
+          </div>
+          <div class="stat-label">
+            话题总数
+          </div>
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon">📝</div>
+        <div class="stat-icon">
+          📝
+        </div>
         <div class="stat-info">
-          <div class="stat-value">{{ stats.speeches }}</div>
-          <div class="stat-label">发言总数</div>
+          <div class="stat-value">
+            {{ stats.speeches }}
+          </div>
+          <div class="stat-label">
+            发言总数
+          </div>
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon">⚠️</div>
+        <div class="stat-icon">
+          ⚠️
+        </div>
         <div class="stat-info">
-          <div class="stat-value">{{ stats.violations }}</div>
-          <div class="stat-label">违规总数</div>
+          <div class="stat-value">
+            {{ stats.violations }}
+          </div>
+          <div class="stat-label">
+            违规总数
+          </div>
         </div>
       </div>
     </div>
@@ -35,12 +59,23 @@
       <div class="chart-card">
         <h3>用户增长趋势</h3>
         <div class="chart-placeholder">
-          <div v-for="(item, index) in trends.users" :key="index" class="trend-bar">
-            <div class="bar-label">{{ item.date }}</div>
-            <div class="bar-container">
-              <div class="bar-fill" :style="{ width: `${item.value}%` }"></div>
+          <div
+            v-for="(item, index) in trends.users"
+            :key="index"
+            class="trend-bar"
+          >
+            <div class="bar-label">
+              {{ item.date }}
             </div>
-            <div class="bar-value">{{ item.count }}</div>
+            <div class="bar-container">
+              <div
+                class="bar-fill"
+                :style="{ width: `${item.value}%` }"
+              />
+            </div>
+            <div class="bar-value">
+              {{ item.count }}
+            </div>
           </div>
         </div>
       </div>
@@ -48,12 +83,23 @@
       <div class="chart-card">
         <h3>话题发布趋势</h3>
         <div class="chart-placeholder">
-          <div v-for="(item, index) in trends.topics" :key="index" class="trend-bar">
-            <div class="bar-label">{{ item.date }}</div>
-            <div class="bar-container">
-              <div class="bar-fill" :style="{ width: `${item.value}%` }"></div>
+          <div
+            v-for="(item, index) in trends.topics"
+            :key="index"
+            class="trend-bar"
+          >
+            <div class="bar-label">
+              {{ item.date }}
             </div>
-            <div class="bar-value">{{ item.count }}</div>
+            <div class="bar-container">
+              <div
+                class="bar-fill"
+                :style="{ width: `${item.value}%` }"
+              />
+            </div>
+            <div class="bar-value">
+              {{ item.count }}
+            </div>
           </div>
         </div>
       </div>
@@ -61,12 +107,23 @@
       <div class="chart-card">
         <h3>违规趋势</h3>
         <div class="chart-placeholder">
-          <div v-for="(item, index) in trends.violations" :key="index" class="trend-bar">
-            <div class="bar-label">{{ item.date }}</div>
-            <div class="bar-container">
-              <div class="bar-fill violation" :style="{ width: `${item.value}%` }"></div>
+          <div
+            v-for="(item, index) in trends.violations"
+            :key="index"
+            class="trend-bar"
+          >
+            <div class="bar-label">
+              {{ item.date }}
             </div>
-            <div class="bar-value">{{ item.count }}</div>
+            <div class="bar-container">
+              <div
+                class="bar-fill violation"
+                :style="{ width: `${item.value}%` }"
+              />
+            </div>
+            <div class="bar-value">
+              {{ item.count }}
+            </div>
           </div>
         </div>
       </div>
@@ -76,6 +133,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import request from '@/api/request'
 
 const stats = ref({
   activeUsers: 0,
@@ -94,9 +152,15 @@ onMounted(() => {
   loadStats()
 })
 
-const loadStats = () => {
-  console.log('加载统计数据')
-  // TODO: 调用API获取统计数据
+const loadStats = async () => {
+  try {
+    const res = await request.get('/admin/stats')
+    if (res.code === 200) {
+      stats.value = res.data
+    }
+  } catch (err) {
+    console.error('统计数据接口暂未实现:', err)
+  }
 }
 </script>
 

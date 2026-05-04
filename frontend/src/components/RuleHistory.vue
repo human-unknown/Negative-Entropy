@@ -2,7 +2,9 @@
   <div class="rule-history">
     <div class="history-header">
       <h1>规则修改历史</h1>
-      <p class="subtitle">记录所有规则变更，保持透明公开</p>
+      <p class="subtitle">
+        记录所有规则变更，保持透明公开
+      </p>
     </div>
 
     <div class="timeline">
@@ -19,7 +21,10 @@
         <div class="timeline-content">
           <div class="record-header">
             <h2>{{ record.debate.title }}</h2>
-            <span class="status-tag" :class="record.result.final_decision">
+            <span
+              class="status-tag"
+              :class="record.result.final_decision"
+            >
               {{ record.result.final_decision === 'approved' ? '已通过' : '已拒绝' }}
             </span>
           </div>
@@ -30,7 +35,9 @@
                 <h3>修改前</h3>
                 <p>{{ record.debate.current_status }}</p>
               </div>
-              <div class="compare-arrow">→</div>
+              <div class="compare-arrow">
+                →
+              </div>
               <div class="compare-item after">
                 <h3>修改后</h3>
                 <p>{{ record.debate.modify_content }}</p>
@@ -50,7 +57,10 @@
                 <span class="label">判定时间</span>
                 <span class="value">{{ formatTime(record.result.created_at) }}</span>
               </div>
-              <div class="meta-item" v-if="record.result.final_decision === 'approved'">
+              <div
+                v-if="record.result.final_decision === 'approved'"
+                class="meta-item"
+              >
                 <span class="label">生效时间</span>
                 <span class="value">{{ getEffectiveTime(record.result.created_at) }}</span>
               </div>
@@ -64,14 +74,17 @@
       </div>
     </div>
 
-    <div v-if="records.length === 0" class="empty-state">
+    <div
+      v-if="records.length === 0"
+      class="empty-state"
+    >
       <p>暂无规则修改记录</p>
     </div>
   </div>
 </template>
 
 <script setup>
-const props = defineProps({
+defineProps({
   records: {
     type: Array,
     default: () => []

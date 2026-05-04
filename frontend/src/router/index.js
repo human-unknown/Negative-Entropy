@@ -60,6 +60,21 @@ const routes = [
     name: 'Admin',
     component: () => import('@/views/Admin.vue'),
     meta: { requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: '/rules',
+    name: 'RuleDebateList',
+    component: () => import('@/views/RuleDebateList.vue')
+  },
+  {
+    path: '/rules/debate/:id',
+    name: 'RuleDebateDetail',
+    component: () => import('@/views/RuleDebateDetail.vue')
+  },
+  {
+    path: '/rules/history',
+    name: 'RuleHistoryPage',
+    component: () => import('@/views/RuleHistoryPage.vue')
   }
 ]
 

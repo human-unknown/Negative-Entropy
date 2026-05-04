@@ -1,5 +1,8 @@
 <template>
-  <div class="search-box" ref="searchBoxRef">
+  <div
+    ref="searchBoxRef"
+    class="search-box"
+  >
     <div class="search-input-wrapper">
       <input
         v-model="searchKeyword"
@@ -11,26 +14,49 @@
         @keydown.enter="handleSearch"
         @keydown.down.prevent="navigateDown"
         @keydown.up.prevent="navigateUp"
-      />
-      <button class="search-btn" @click="handleSearch">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-          <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+      >
+      <button
+        class="search-btn"
+        @click="handleSearch"
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 16 16"
+          fill="currentColor"
+        >
+          <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
         </svg>
       </button>
     </div>
 
-    <div v-if="showDropdown && (suggestions.length > 0 || loading)" class="search-dropdown">
-      <div v-if="loading" class="dropdown-loading">搜索中...</div>
-      <div v-else-if="suggestions.length === 0" class="dropdown-empty">暂无结果</div>
+    <div
+      v-if="showDropdown && (suggestions.length > 0 || loading)"
+      class="search-dropdown"
+    >
       <div
-        v-else
+        v-if="loading"
+        class="dropdown-loading"
+      >
+        搜索中...
+      </div>
+      <div
+        v-else-if="suggestions.length === 0"
+        class="dropdown-empty"
+      >
+        暂无结果
+      </div>
+      <div
         v-for="(item, index) in suggestions"
+        v-else
         :key="item.id"
         :class="['dropdown-item', { active: selectedIndex === index }]"
         @click="selectItem(item)"
         @mouseenter="selectedIndex = index"
       >
-        <div class="item-title">{{ item.title }}</div>
+        <div class="item-title">
+          {{ item.title }}
+        </div>
         <div class="item-meta">
           <span class="item-category">{{ item.category }}</span>
           <span class="item-author">{{ item.publisher_name }}</span>

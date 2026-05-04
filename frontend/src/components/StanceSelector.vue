@@ -6,29 +6,57 @@
         :class="['option', 'pro', { disabled: proFull }]"
         @click="selectStance(1)"
       >
-        <div class="icon">⚔️</div>
-        <div class="label">正方</div>
-        <div class="count">{{ proCount }}/{{ topic.pro_limit }}</div>
-        <div v-if="proFull" class="full-tag">已满</div>
+        <div class="icon">
+          ⚔️
+        </div>
+        <div class="label">
+          正方
+        </div>
+        <div class="count">
+          {{ proCount }}/{{ topic.pro_limit }}
+        </div>
+        <div
+          v-if="proFull"
+          class="full-tag"
+        >
+          已满
+        </div>
       </div>
 
       <div 
         :class="['option', 'con', { disabled: conFull }]"
         @click="selectStance(2)"
       >
-        <div class="icon">🛡️</div>
-        <div class="label">反方</div>
-        <div class="count">{{ conCount }}/{{ topic.con_limit }}</div>
-        <div v-if="conFull" class="full-tag">已满</div>
+        <div class="icon">
+          🛡️
+        </div>
+        <div class="label">
+          反方
+        </div>
+        <div class="count">
+          {{ conCount }}/{{ topic.con_limit }}
+        </div>
+        <div
+          v-if="conFull"
+          class="full-tag"
+        >
+          已满
+        </div>
       </div>
 
       <div 
         class="option audience"
         @click="selectStance(3)"
       >
-        <div class="icon">👥</div>
-        <div class="label">观众</div>
-        <div class="count">{{ audienceCount }}</div>
+        <div class="icon">
+          👥
+        </div>
+        <div class="label">
+          观众
+        </div>
+        <div class="count">
+          {{ audienceCount }}
+        </div>
       </div>
     </div>
   </div>

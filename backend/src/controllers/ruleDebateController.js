@@ -2,6 +2,14 @@ import pool from '../config/database.js'
 import { success, error } from '../utils/response.js'
 import { USER_LEVEL } from '../constants/userLevel.js'
 
+// 规则辩论投票权重映射
+const RULE_VOTE_WEIGHT = {
+  [USER_LEVEL.BEGINNER]: 1.0,
+  [USER_LEVEL.INTERMEDIATE]: 1.2,
+  [USER_LEVEL.ADVANCED]: 1.5,
+  [USER_LEVEL.ADMIN]: 2.0
+}
+
 export const createRuleDebate = async (req, res) => {
   const conn = await pool.getConnection()
   try {
@@ -9,18 +17,15 @@ export const createRuleDebate = async (req, res) => {
     const { title, currentStatus, modifyContent, duration } = req.body
 
     if (!title || !currentStatus || !modifyContent) {
-      await conn.release()
       return res.json(error('标题、当前状态和修改内容不能为空', 400))
     }
 
     if (title.length > 200 || modifyContent.length > 2000) {
-      await conn.release()
       return res.json(error('标题或内容过长', 400))
     }
 
     const durationNum = parseInt(duration)
     if (!durationNum || durationNum < 1 || durationNum > 30) {
-      await conn.release()
       return res.json(error('辩论时长需在1-30天之间', 400))
     }
 
@@ -72,7 +77,6 @@ export const joinRuleDebate = async (req, res) => {
     const { stance } = req.body
 
     if (!stance || !['support', 'oppose'].includes(stance)) {
-      await conn.release()
       return res.json(error('立场参数错误', 400))
     }
 
@@ -85,20 +89,17 @@ export const joinRuleDebate = async (req, res) => {
 
     if (!debate.length) {
       await conn.rollback()
-      conn.release()
       return res.json(error('辩论不存在', 404))
     }
 
     if (debate[0].status !== 'pending') {
       await conn.rollback()
-      conn.release()
       return res.json(error('辩论已结束，无法加入', 400))
     }
 
     const expireTime = new Date(debate[0].created_at).getTime() + debate[0].duration * 24 * 60 * 60 * 1000
     if (Date.now() > expireTime) {
       await conn.rollback()
-      conn.release()
       return res.json(error('辩论已过期', 400))
     }
 
@@ -109,7 +110,6 @@ export const joinRuleDebate = async (req, res) => {
 
     if (existing.length > 0) {
       await conn.rollback()
-      conn.release()
       return res.json(error('您已参与该辩论，不可重复选择', 400))
     }
 
@@ -137,13 +137,11 @@ export const createRuleDebateSpeech = async (req, res) => {
     const { content } = req.body
 
     if (!content || typeof content !== 'string') {
-      await conn.release()
       return res.json(error('发言内容不能为空', 400))
     }
 
     const wordCount = content.trim().length
     if (wordCount < 10 || wordCount > 1000) {
-      await conn.release()
       return res.json(error('发言字数需在10-1000字之间', 400))
     }
 
@@ -156,20 +154,17 @@ export const createRuleDebateSpeech = async (req, res) => {
 
     if (!debate.length) {
       await conn.rollback()
-      conn.release()
       return res.json(error('辩论不存在', 404))
     }
 
     if (debate[0].status !== 'pending') {
       await conn.rollback()
-      conn.release()
       return res.json(error('辩论已结束', 400))
     }
 
     const expireTime = new Date(debate[0].created_at).getTime() + debate[0].duration * 24 * 60 * 60 * 1000
     if (Date.now() > expireTime) {
       await conn.rollback()
-      conn.release()
       return res.json(error('辩论已过期', 400))
     }
 
@@ -180,7 +175,6 @@ export const createRuleDebateSpeech = async (req, res) => {
 
     if (participants.length === 0) {
       await conn.rollback()
-      conn.release()
       return res.json(error('请先选择立场加入辩论', 400))
     }
 
@@ -212,7 +206,6 @@ export const voteRuleDebate = async (req, res) => {
     const { vote } = req.body
 
     if (!vote || !['support', 'oppose'].includes(vote)) {
-      await conn.release()
       return res.json(error('投票参数错误', 400))
     }
 
@@ -225,20 +218,17 @@ export const voteRuleDebate = async (req, res) => {
 
     if (!debate.length) {
       await conn.rollback()
-      conn.release()
       return res.json(error('辩论不存在', 404))
     }
 
     if (debate[0].status !== 'pending') {
       await conn.rollback()
-      conn.release()
       return res.json(error('辩论已结束，无法投票', 400))
     }
 
     const expireTime = new Date(debate[0].created_at).getTime() + debate[0].duration * 24 * 60 * 60 * 1000
     if (Date.now() > expireTime) {
       await conn.rollback()
-      conn.release()
       return res.json(error('辩论已过期', 400))
     }
 
@@ -249,13 +239,12 @@ export const voteRuleDebate = async (req, res) => {
 
     if (existing.length > 0) {
       await conn.rollback()
-      conn.release()
       return res.json(error('您已投过票，不可重复投票', 400))
     }
 
     const [users] = await conn.query('SELECT level FROM user WHERE id = ?', [userId])
     const level = users[0]?.level || 1
-    const weight = level === 4 ? 2.00 : level === 3 ? 1.50 : level === 2 ? 1.20 : 1.00
+    const weight = RULE_VOTE_WEIGHT[level] || 1.0
 
     await conn.query(
       'INSERT INTO rule_debate_vote (debate_id, user_id, vote, weight) VALUES (?, ?, ?, ?)',
@@ -276,12 +265,11 @@ export const voteRuleDebate = async (req, res) => {
 export const settleRuleDebate = async (req, res) => {
   const conn = await pool.getConnection()
   try {
-    const userId = req.user?.userId || req.user?.id
+    const _userId = req.user?.userId || req.user?.id
     const { debateId } = req.params
     const { adminDecision } = req.body
 
     if (!adminDecision || !['approved', 'rejected'].includes(adminDecision)) {
-      await conn.release()
       return res.json(error('管理员决定参数错误', 400))
     }
 
@@ -294,13 +282,11 @@ export const settleRuleDebate = async (req, res) => {
 
     if (!debate.length) {
       await conn.rollback()
-      conn.release()
       return res.json(error('辩论不存在', 404))
     }
 
     if (debate[0].status !== 'pending') {
       await conn.rollback()
-      conn.release()
       return res.json(error('辩论已结算', 400))
     }
 
@@ -311,7 +297,6 @@ export const settleRuleDebate = async (req, res) => {
 
     if (existingResult.length > 0) {
       await conn.rollback()
-      conn.release()
       return res.json(error('辩论已结算', 400))
     }
 
@@ -350,5 +335,98 @@ export const settleRuleDebate = async (req, res) => {
     res.json(error(err.code === 'ER_DUP_ENTRY' ? '辩论已结算' : '判定规则辩论失败', 500))
   } finally {
     conn.release()
+  }
+}
+
+export const getRuleDebateDetail = async (req, res) => {
+  try {
+    const { debateId } = req.params
+
+    const [debates] = await pool.query(
+      `SELECT rd.*, u.name as initiator_name
+       FROM rule_debate rd
+       LEFT JOIN user u ON rd.initiator_id = u.id
+       WHERE rd.id = ?`,
+      [debateId]
+    )
+
+    if (!debates.length) {
+      return res.json(error('辩论不存在', 404))
+    }
+
+    const [participants] = await pool.query(
+      `SELECT rdp.*, u.name as user_name
+       FROM rule_debate_participant rdp
+       LEFT JOIN user u ON rdp.user_id = u.id
+       WHERE rdp.debate_id = ?`,
+      [debateId]
+    )
+
+    const supportCount = participants.filter(p => p.stance === 'support').length
+    const opposeCount = participants.filter(p => p.stance === 'oppose').length
+
+    res.json(success({
+      ...debates[0],
+      participants,
+      supportCount,
+      opposeCount
+    }))
+  } catch (err) {
+    console.error('获取规则辩论详情失败:', err)
+    res.json(error('获取规则辩论详情失败', 500))
+  }
+}
+
+export const getRuleDebateSpeeches = async (req, res) => {
+  try {
+    const { debateId } = req.params
+    const { audit_status } = req.query
+
+    const conditions = ['rds.debate_id = ?']
+    const params = [debateId]
+
+    if (audit_status !== undefined) {
+      conditions.push('rds.audit_status = ?')
+      params.push(parseInt(audit_status))
+    } else {
+      conditions.push('rds.audit_status = 1')
+    }
+
+    const whereClause = conditions.join(' AND ')
+
+    const [speeches] = await pool.query(
+      `SELECT rds.*, u.name as user_name, rdp.stance
+       FROM rule_debate_speech rds
+       LEFT JOIN user u ON rds.user_id = u.id
+       LEFT JOIN rule_debate_participant rdp ON rds.debate_id = rdp.debate_id AND rds.user_id = rdp.user_id
+       WHERE ${whereClause}
+       ORDER BY rds.created_at ASC`,
+      params
+    )
+
+    res.json(success(speeches))
+  } catch (err) {
+    console.error('获取规则辩论发言失败:', err)
+    res.json(error('获取规则辩论发言失败', 500))
+  }
+}
+
+export const getRuleDebateResult = async (req, res) => {
+  try {
+    const { debateId } = req.params
+
+    const [results] = await pool.query(
+      `SELECT * FROM rule_debate_result WHERE debate_id = ?`,
+      [debateId]
+    )
+
+    if (!results.length) {
+      return res.json(error('辩论结果不存在', 404))
+    }
+
+    res.json(success(results[0]))
+  } catch (err) {
+    console.error('获取规则辩论结果失败:', err)
+    res.json(error('获取规则辩论结果失败', 500))
   }
 }

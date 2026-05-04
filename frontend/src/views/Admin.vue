@@ -14,6 +14,14 @@
           <span class="menu-icon">{{ item.icon }}</span>
           <span class="menu-label">{{ item.label }}</span>
         </div>
+        <div class="sidebar-footer">
+          <button
+            class="shutdown-btn"
+            @click="handleShutdown"
+          >
+            ⏻ 关闭服务
+          </button>
+        </div>
       </nav>
     </aside>
     <main class="admin-main">
@@ -34,6 +42,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { ElMessageBox } from 'element-plus'
 import AdminUserManagement from '@/components/AdminUserManagement.vue'
 import AdminContentReview from '@/components/AdminContentReview.vue'
 import AdminManualReview from '@/components/AdminManualReview.vue'
@@ -55,6 +64,28 @@ const menuItems = [
 const currentMenuLabel = computed(() => {
   return menuItems.find(item => item.key === activeMenu.value)?.label || ''
 })
+
+const handleShutdown = async () => {
+  try {
+    await ElMessageBox.confirm('确定要关闭整个服务？\n后端服务器将停止运行，前端页面将关闭。', '警告', { type: 'warning', confirmButtonText: '确认关闭', cancelButtonText: '取消' })
+  } catch {
+    return
+  }
+
+  try {
+    await fetch('/api/system/shutdown', { method: 'POST' })
+  } catch (_) {
+    // 响应回来之前后端就已经停了，正常
+  }
+
+  // 关闭当前页面
+  window.close()
+  // 如果 window.close 被浏览器阻止（常见于非脚本打开的页面），
+  // 给出提示
+  setTimeout(() => {
+    document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;font-size:18px;color:#999">服务已关闭，请关闭此标签页</div>'
+  }, 500)
+}
 </script>
 
 <style scoped>
@@ -115,6 +146,28 @@ const currentMenuLabel = computed(() => {
 
 .menu-label {
   font-size: 15px;
+}
+
+.sidebar-footer {
+  padding: 16px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.shutdown-btn {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid rgba(255, 76, 76, 0.5);
+  background: transparent;
+  color: #ff4c4c;
+  font-size: 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.shutdown-btn:hover {
+  background: #ff4c4c;
+  color: #fff;
 }
 
 .admin-main {

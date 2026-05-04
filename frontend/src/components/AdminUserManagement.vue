@@ -7,14 +7,27 @@
         placeholder="搜索用户名或ID"
         class="search-input"
         @keyup.enter="handleSearch"
-      />
-      <button class="search-btn" @click="handleSearch">搜索</button>
+      >
+      <button
+        class="search-btn"
+        @click="handleSearch"
+      >
+        搜索
+      </button>
     </div>
 
-    <div v-if="selectedUser" class="user-detail">
+    <div
+      v-if="selectedUser"
+      class="user-detail"
+    >
       <div class="detail-header">
         <h3>用户详情</h3>
-        <button class="close-btn" @click="selectedUser = null">✕</button>
+        <button
+          class="close-btn"
+          @click="selectedUser = null"
+        >
+          ✕
+        </button>
       </div>
       
       <div class="detail-content">
@@ -30,7 +43,10 @@
           </div>
           <div class="info-row">
             <span class="label">等级：</span>
-            <span class="value level-badge" :class="`level-${selectedUser.level}`">
+            <span
+              class="value level-badge"
+              :class="`level-${selectedUser.level}`"
+            >
               {{ getLevelText(selectedUser.level) }}
             </span>
           </div>
@@ -44,7 +60,10 @@
           </div>
           <div class="info-row">
             <span class="label">账号状态：</span>
-            <span class="value" :class="getStatusClass(selectedUser.status)">
+            <span
+              class="value"
+              :class="getStatusClass(selectedUser.status)"
+            >
               {{ getStatusText(selectedUser.status) }}
             </span>
           </div>
@@ -52,52 +71,90 @@
 
         <div class="violation-section">
           <h4>违规记录</h4>
-          <div v-if="selectedUser.violations && selectedUser.violations.length > 0" class="violation-list">
+          <div
+            v-if="selectedUser.violations && selectedUser.violations.length > 0"
+            class="violation-list"
+          >
             <div
               v-for="violation in selectedUser.violations"
               :key="violation.id"
               class="violation-item"
             >
-              <div class="violation-type">{{ violation.type }}</div>
-              <div class="violation-reason">{{ violation.reason }}</div>
-              <div class="violation-time">{{ formatDate(violation.created_at) }}</div>
+              <div class="violation-type">
+                {{ violation.type }}
+              </div>
+              <div class="violation-reason">
+                {{ violation.reason }}
+              </div>
+              <div class="violation-time">
+                {{ formatDate(violation.created_at) }}
+              </div>
             </div>
           </div>
-          <div v-else class="no-data">暂无违规记录</div>
+          <div
+            v-else
+            class="no-data"
+          >
+            暂无违规记录
+          </div>
         </div>
 
         <div class="punishment-section">
           <h4>处罚记录</h4>
-          <div v-if="selectedUser.punishments && selectedUser.punishments.length > 0" class="punishment-list">
+          <div
+            v-if="selectedUser.punishments && selectedUser.punishments.length > 0"
+            class="punishment-list"
+          >
             <div
               v-for="punishment in selectedUser.punishments"
               :key="punishment.id"
               class="punishment-item"
             >
-              <div class="punishment-type">{{ punishment.type }}</div>
-              <div class="punishment-reason">{{ punishment.reason }}</div>
+              <div class="punishment-type">
+                {{ punishment.type }}
+              </div>
+              <div class="punishment-reason">
+                {{ punishment.reason }}
+              </div>
               <div class="punishment-time">
                 {{ formatDate(punishment.start_time) }} - 
                 {{ punishment.end_time ? formatDate(punishment.end_time) : '永久' }}
               </div>
             </div>
           </div>
-          <div v-else class="no-data">暂无处罚记录</div>
+          <div
+            v-else
+            class="no-data"
+          >
+            暂无处罚记录
+          </div>
         </div>
 
         <div class="action-section">
           <h4>管理操作</h4>
           <div class="action-buttons">
-            <button class="action-btn warning" @click="showActionModal('warning')">
+            <button
+              class="action-btn warning"
+              @click="showActionModal('warning')"
+            >
               ⚠️ 警告
             </button>
-            <button class="action-btn mute" @click="showActionModal('mute')">
+            <button
+              class="action-btn mute"
+              @click="showActionModal('mute')"
+            >
               🔇 禁言
             </button>
-            <button class="action-btn ban" @click="showActionModal('ban')">
+            <button
+              class="action-btn ban"
+              @click="showActionModal('ban')"
+            >
               🚫 封号
             </button>
-            <button class="action-btn unban" @click="showActionModal('unban')">
+            <button
+              class="action-btn unban"
+              @click="showActionModal('unban')"
+            >
               ✅ 解封
             </button>
           </div>
@@ -105,8 +162,14 @@
       </div>
     </div>
 
-    <div v-else class="user-list">
-      <div v-if="users.length > 0" class="list-container">
+    <div
+      v-else
+      class="user-list"
+    >
+      <div
+        v-if="users.length > 0"
+        class="list-container"
+      >
         <div
           v-for="user in users"
           :key="user.id"
@@ -114,11 +177,18 @@
           @click="selectUser(user)"
         >
           <div class="user-info">
-            <div class="user-name">{{ user.username }}</div>
-            <div class="user-id">ID: {{ user.id }}</div>
+            <div class="user-name">
+              {{ user.username }}
+            </div>
+            <div class="user-id">
+              ID: {{ user.id }}
+            </div>
           </div>
           <div class="user-level">
-            <span class="level-badge" :class="`level-${user.level}`">
+            <span
+              class="level-badge"
+              :class="`level-${user.level}`"
+            >
               {{ getLevelText(user.level) }}
             </span>
           </div>
@@ -129,16 +199,31 @@
           </div>
         </div>
       </div>
-      <div v-else class="no-data">
+      <div
+        v-else
+        class="no-data"
+      >
         {{ searchQuery ? '未找到匹配的用户' : '请输入搜索条件' }}
       </div>
     </div>
 
-    <div v-if="showModal" class="modal-overlay" @click="closeModal">
-      <div class="modal-content" @click.stop>
+    <div
+      v-if="showModal"
+      class="modal-overlay"
+      @click="closeModal"
+    >
+      <div
+        class="modal-content"
+        @click.stop
+      >
         <div class="modal-header">
           <h3>{{ getActionTitle(currentAction) }}</h3>
-          <button class="close-btn" @click="closeModal">✕</button>
+          <button
+            class="close-btn"
+            @click="closeModal"
+          >
+            ✕
+          </button>
         </div>
         <div class="modal-body">
           <div class="form-group">
@@ -148,22 +233,48 @@
               placeholder="请输入处罚原因"
               rows="4"
               class="form-textarea"
-            ></textarea>
+            />
           </div>
-          <div v-if="currentAction === 'mute' || currentAction === 'ban'" class="form-group">
+          <div
+            v-if="currentAction === 'mute' || currentAction === 'ban'"
+            class="form-group"
+          >
             <label>处罚时长：</label>
-            <select v-model="actionDuration" class="form-select">
-              <option value="1">1天</option>
-              <option value="3">3天</option>
-              <option value="7">7天</option>
-              <option value="30">30天</option>
-              <option value="0">永久</option>
+            <select
+              v-model="actionDuration"
+              class="form-select"
+            >
+              <option value="1">
+                1天
+              </option>
+              <option value="3">
+                3天
+              </option>
+              <option value="7">
+                7天
+              </option>
+              <option value="30">
+                30天
+              </option>
+              <option value="0">
+                永久
+              </option>
             </select>
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn-cancel" @click="closeModal">取消</button>
-          <button class="btn-confirm" @click="confirmAction">确认</button>
+          <button
+            class="btn-cancel"
+            @click="closeModal"
+          >
+            取消
+          </button>
+          <button
+            class="btn-confirm"
+            @click="confirmAction"
+          >
+            确认
+          </button>
         </div>
       </div>
     </div>
@@ -173,6 +284,7 @@
 <script setup>
 import { ref } from 'vue'
 import { USER_LEVEL_TEXT } from '@/constants/userLevel'
+import request from '@/api/request'
 
 const searchQuery = ref('')
 const users = ref([])
@@ -182,15 +294,22 @@ const currentAction = ref('')
 const actionReason = ref('')
 const actionDuration = ref('1')
 
-const handleSearch = () => {
-  console.log('搜索用户:', searchQuery.value)
-  // TODO: 调用API搜索用户
+const handleSearch = async () => {
+  try {
+    const res = await request.get('/admin/users/search', { params: { query: searchQuery.value } })
+    users.value = res.data.users
+  } catch (err) {
+    console.error('搜索用户失败:', err)
+  }
 }
 
-const selectUser = (user) => {
-  selectedUser.value = user
-  console.log('选中用户:', user)
-  // TODO: 调用API获取用户详细信息
+const selectUser = async (user) => {
+  try {
+    const res = await request.get(`/admin/users/${user.id}`)
+    selectedUser.value = res.data
+  } catch (err) {
+    console.error('获取用户详情失败:', err)
+  }
 }
 
 const showActionModal = (action) => {
@@ -206,15 +325,22 @@ const closeModal = () => {
   actionReason.value = ''
 }
 
-const confirmAction = () => {
-  console.log('执行操作:', {
-    action: currentAction.value,
-    userId: selectedUser.value?.id,
-    reason: actionReason.value,
-    duration: actionDuration.value
-  })
-  // TODO: 调用API执行操作
-  closeModal()
+const confirmAction = async () => {
+  try {
+    if (currentAction.value === 'unban') {
+      await request.post('/admin/restore', { userId: selectedUser.value.id })
+    } else if (currentAction.value === 'warning') {
+      await request.post('/admin/punish', { userId: selectedUser.value.id, type: 1, reason: actionReason.value })
+    } else if (currentAction.value === 'mute') {
+      await request.post('/admin/punish', { userId: selectedUser.value.id, type: 2, reason: actionReason.value, duration: actionDuration.value })
+    } else if (currentAction.value === 'ban') {
+      await request.post('/admin/punish', { userId: selectedUser.value.id, type: 3, reason: actionReason.value, duration: actionDuration.value })
+    }
+    closeModal()
+    await handleSearch()
+  } catch (err) {
+    console.error('操作失败:', err)
+  }
 }
 
 const getLevelText = (level) => {

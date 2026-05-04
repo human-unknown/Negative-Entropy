@@ -2,12 +2,19 @@
   <div class="debate-page">
     <div class="debate-container">
       <h1>AI辩论考核</h1>
-      <p class="desc">请针对以下辩题发表你的观点（至少50字）</p>
+      <p class="desc">
+        请针对以下辩题发表你的观点（至少50字）
+      </p>
       
-      <div v-if="!submitted" class="debate-form">
+      <div
+        v-if="!submitted"
+        class="debate-form"
+      >
         <div class="topic-box">
           <h3>辩题</h3>
-          <p class="topic">{{ topic }}</p>
+          <p class="topic">
+            {{ topic }}
+          </p>
         </div>
         
         <div class="speech-box">
@@ -16,16 +23,25 @@
             placeholder="请输入你的观点，注意使用逻辑连接词（因为、所以、首先、其次等），保持理性表达..."
             class="speech-input"
             rows="10"
-          ></textarea>
-          <p class="char-count">{{ speech.length }}/50字</p>
+          />
+          <p class="char-count">
+            {{ speech.length }}/50字
+          </p>
         </div>
         
-        <button @click="submit" :disabled="speech.length < 50 || loading" class="submit-btn">
+        <button
+          :disabled="speech.length < 50 || loading"
+          class="submit-btn"
+          @click="submit"
+        >
           {{ loading ? '提交中...' : '提交观点' }}
         </button>
       </div>
       
-      <div v-else class="result">
+      <div
+        v-else
+        class="result"
+      >
         <h2>考核结果</h2>
         <div class="score-detail">
           <div class="score-item">
@@ -41,9 +57,24 @@
             <span class="value">{{ result.score }}分</span>
           </div>
         </div>
-        <p v-if="result.passed" class="pass-text">恭喜通过考核！</p>
-        <p v-else class="fail-text">未通过考核，需要60分以上</p>
-        <button @click="checkResult" class="next-btn">查看审核结果</button>
+        <p
+          v-if="result.passed"
+          class="pass-text"
+        >
+          恭喜通过考核！
+        </p>
+        <p
+          v-else
+          class="fail-text"
+        >
+          未通过考核，需要60分以上
+        </p>
+        <button
+          class="next-btn"
+          @click="checkResult"
+        >
+          查看审核结果
+        </button>
       </div>
     </div>
   </div>
@@ -52,6 +83,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import request from '@/api/request'
 
 const router = useRouter()
@@ -71,13 +103,13 @@ onMounted(async () => {
       topic.value = res.data.topic
     }
   } catch (error) {
-    alert('加载辩题失败')
+    ElMessage.error('加载辩题失败')
   }
 })
 
 const submit = async () => {
   if (speech.value.length < 50) {
-    alert('发言内容至少50字')
+    ElMessage.warning('发言内容至少50字')
     return
   }
   
@@ -93,10 +125,10 @@ const submit = async () => {
       result.value = res.data
       submitted.value = true
     } else {
-      alert(res.message || '提交失败')
+      ElMessage.error(res.message || '提交失败')
     }
   } catch (error) {
-    alert('提交失败，请重试')
+    ElMessage.error('提交失败，请重试')
   } finally {
     loading.value = false
   }

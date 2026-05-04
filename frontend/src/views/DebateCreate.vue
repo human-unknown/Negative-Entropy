@@ -4,44 +4,98 @@
     <form @submit.prevent="handleSubmit">
       <div class="form-item">
         <label>标题 *</label>
-        <input v-model="form.title" placeholder="请输入辩论标题" maxlength="100" />
-        <span class="error" v-if="errors.title">{{ errors.title }}</span>
+        <input
+          v-model="form.title"
+          placeholder="请输入辩论标题"
+          maxlength="100"
+        >
+        <span
+          v-if="errors.title"
+          class="error"
+        >{{ errors.title }}</span>
       </div>
 
       <div class="form-item">
         <label>描述 *</label>
-        <textarea v-model="form.description" placeholder="请详细描述辩论内容" maxlength="500" rows="6"></textarea>
-        <span class="error" v-if="errors.description">{{ errors.description }}</span>
+        <textarea
+          v-model="form.description"
+          placeholder="请详细描述辩论内容"
+          maxlength="500"
+          rows="6"
+        />
+        <span
+          v-if="errors.description"
+          class="error"
+        >{{ errors.description }}</span>
       </div>
 
       <div class="form-item">
         <label>分类 *</label>
         <select v-model="form.category">
-          <option value="">请选择分类</option>
-          <option value="tech">科技</option>
-          <option value="society">社会</option>
-          <option value="culture">文化</option>
-          <option value="economy">经济</option>
+          <option value="">
+            请选择分类
+          </option>
+          <option value="tech">
+            科技
+          </option>
+          <option value="society">
+            社会
+          </option>
+          <option value="culture">
+            文化
+          </option>
+          <option value="economy">
+            经济
+          </option>
         </select>
-        <span class="error" v-if="errors.category">{{ errors.category }}</span>
+        <span
+          v-if="errors.category"
+          class="error"
+        >{{ errors.category }}</span>
       </div>
 
       <div class="form-row">
         <div class="form-item">
           <label>正方人数上限 *</label>
-          <input type="number" v-model.number="form.pro_limit" min="1" max="10" />
-          <span class="error" v-if="errors.pro_limit">{{ errors.pro_limit }}</span>
+          <input
+            v-model.number="form.pro_limit"
+            type="number"
+            min="1"
+            max="10"
+          >
+          <span
+            v-if="errors.pro_limit"
+            class="error"
+          >{{ errors.pro_limit }}</span>
         </div>
         <div class="form-item">
           <label>反方人数上限 *</label>
-          <input type="number" v-model.number="form.con_limit" min="1" max="10" />
-          <span class="error" v-if="errors.con_limit">{{ errors.con_limit }}</span>
+          <input
+            v-model.number="form.con_limit"
+            type="number"
+            min="1"
+            max="10"
+          >
+          <span
+            v-if="errors.con_limit"
+            class="error"
+          >{{ errors.con_limit }}</span>
         </div>
       </div>
 
       <div class="actions">
-        <button type="button" @click="$router.back()">取消</button>
-        <button type="submit" :disabled="submitting">{{ submitting ? '提交中...' : '提交审核' }}</button>
+        <button
+          type="button"
+          @click="$router.back()"
+        >
+          取消
+        </button>
+        <button
+          type="submit"
+          :disabled="submitting"
+        >
+          {{ submitting ? '提交中...' : '提交审核' }}
+        </button>
       </div>
     </form>
   </div>

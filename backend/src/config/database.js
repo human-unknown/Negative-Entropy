@@ -1,7 +1,8 @@
 import mysql from 'mysql2/promise'
 import config from './app.js'
 
-const pool = mysql.createPool({
+// mysql2 v3 不再支持 acquireTimeout 和 timeout 作为连接选项
+const poolConfig = {
   host: config.db.host,
   user: config.db.user,
   password: config.db.password,
@@ -10,16 +11,20 @@ const pool = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0,
   connectTimeout: 10000,
-  acquireTimeout: 10000,
-  timeout: 30000,
   enableKeepAlive: true,
   keepAliveInitialDelay: 0
-})
+}
 
-pool.on('connection', (connection) => {
-  connection.on('error', (err) => {
-    console.error('数据库连接错误:', err)
+const pool = mysql.createPool(poolConfig)
+
+// 测试连接（不阻塞启动）
+pool.getConnection()
+  .then(conn => {
+    conn.release()
+    console.log('数据库连接成功')
   })
-})
+  .catch(err => {
+    console.warn('数据库暂不可用，API 将返回降级响应:', err.message)
+  })
 
 export default pool

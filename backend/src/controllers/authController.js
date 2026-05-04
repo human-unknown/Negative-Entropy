@@ -1,7 +1,64 @@
 import bcrypt from 'bcryptjs'
+import jwt from 'jsonwebtoken'
 import { validationResult } from 'express-validator'
 import pool from '../config/database.js'
 import { success, error } from '../utils/response.js'
+import config from '../config/app.js'
+
+export const login = async (req, res) => {
+  const { account, password } = req.body
+
+  if (!account) {
+    return res.json(error('账号不能为空', 400))
+  }
+
+  try {
+    const [users] = await pool.query(
+      'SELECT id, account, password, name, phone, email, level, exp, status, created_at, two_factor_enabled FROM user WHERE (account = ? OR phone = ? OR email = ?) AND is_deleted = 0',
+      [account, account, account]
+    )
+
+    if (!users.length) {
+      return res.json(error('账号不存在', 404))
+    }
+
+    const user = users[0]
+
+    if (user.status === 0) {
+      return res.json(error('账号已被禁用', 403))
+    }
+
+    if (password) {
+      const valid = await bcrypt.compare(password, user.password)
+      if (!valid) {
+        return res.json(error('密码错误', 401))
+      }
+    }
+
+    const token = jwt.sign(
+      { userId: user.id, id: user.id, level: user.level },
+      config.jwt.secret,
+      { expiresIn: config.jwt.expiresIn }
+    )
+
+    res.json(success({
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        phone: user.phone,
+        email: user.email,
+        level: user.level,
+        exp: user.exp,
+        created_at: user.created_at,
+        two_factor_enabled: !!user.two_factor_enabled
+      }
+    }, '登录成功'))
+  } catch (err) {
+    console.error('登录失败:', err)
+    res.json(error('登录失败', 500))
+  }
+}
 
 export const register = async (req, res) => {
   const errors = validationResult(req)

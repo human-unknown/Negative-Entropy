@@ -11,11 +11,17 @@
         <span class="exp-label">经验值</span>
       </div>
       <div class="exp-bar">
-        <div class="exp-progress" :style="{ width: progressPercent + '%' }"></div>
+        <div
+          class="exp-progress"
+          :style="{ width: progressPercent + '%' }"
+        />
       </div>
     </div>
     
-    <div class="next-level-info" v-if="!isMaxLevel">
+    <div
+      v-if="!isMaxLevel"
+      class="next-level-info"
+    >
       <span>距离{{ nextLevelText }}还需 {{ expNeeded }} 经验</span>
     </div>
   </div>

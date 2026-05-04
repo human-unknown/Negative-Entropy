@@ -2,8 +2,8 @@
   <div class="speech-input">
     <div class="input-header">
       <span class="title">辩手发言</span>
-      <span :class="['word-count', { warning: content.length > 450 }]">
-        {{ content.length }}/500
+      <span :class="['word-count', { warning: content.length > WARNING_THRESHOLD }]">
+        {{ content.length }}/{{ MAX_LENGTH }}
       </span>
     </div>
     <textarea 
@@ -11,12 +11,16 @@
       placeholder="请输入你的观点（10-500字）..."
       maxlength="500"
       :disabled="cooldown > 0 || submitting"
-    ></textarea>
+    />
     <div class="actions">
-      <span v-if="cooldown > 0" class="cooldown">冷却中 {{ cooldown }}s</span>
+      <span
+        v-if="cooldown > 0"
+        class="cooldown"
+      >冷却中 {{ cooldown }}s</span>
       <button 
-        @click="handleSubmit"
         :disabled="!canSubmit"
+        type="button"
+        @click="handleSubmit"
       >
         {{ submitting ? '提交中...' : '发言' }}
       </button>
@@ -28,6 +32,9 @@
 import { ref, computed, onUnmounted } from 'vue'
 import { createSpeech } from '@/api/debate'
 import { ElMessage } from 'element-plus'
+
+const MAX_LENGTH = 500
+const WARNING_THRESHOLD = Math.floor(MAX_LENGTH * 0.9)
 
 const props = defineProps({
   topicId: {
@@ -45,19 +52,21 @@ let timer = null
 
 const canSubmit = computed(() => {
   return content.value.trim().length >= 10 && 
-         content.value.length <= 500 && 
+         content.value.length <= MAX_LENGTH && 
          cooldown.value === 0 && 
          !submitting.value
 })
 
 const startCooldown = () => {
   cooldown.value = 60
-  timer = setInterval(() => {
+  const _timer = setInterval(() => {
     cooldown.value--
     if (cooldown.value <= 0) {
-      clearInterval(timer)
+      clearInterval(_timer)
+      timer = null
     }
   }, 1000)
+  timer = _timer
 }
 
 const handleSubmit = async () => {
@@ -71,7 +80,9 @@ const handleSubmit = async () => {
     startCooldown()
     emit('submitted')
   } catch (err) {
-    console.error(err)
+    console.error('发言提交失败:', err)
+    const msg = err?.response?.data?.message || '发言提交失败，请稍后重试'
+    ElMessage.error(msg)
   } finally {
     submitting.value = false
   }

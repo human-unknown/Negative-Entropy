@@ -3,42 +3,75 @@
     <h2>辩论流程联调测试</h2>
     
     <!-- 步骤1: 选择立场 -->
-    <div v-if="step === 1" class="step">
-      <div class="step-title">步骤1: 选择立场</div>
+    <div
+      v-if="step === 1"
+      class="step"
+    >
+      <div class="step-title">
+        步骤1: 选择立场
+      </div>
       <StanceSelector
         :topic="mockTopic"
-        :proCount="proCount"
-        :conCount="conCount"
-        :audienceCount="audienceCount"
+        :pro-count="proCount"
+        :con-count="conCount"
+        :audience-count="audienceCount"
         @joined="handleJoined"
       />
     </div>
 
     <!-- 步骤2: 辩手发言 -->
-    <div v-if="step === 2 && userStance !== 3" class="step">
-      <div class="step-title">步骤2: 辩手发言</div>
+    <div
+      v-if="step === 2 && userStance !== 3"
+      class="step"
+    >
+      <div class="step-title">
+        步骤2: 辩手发言
+      </div>
       <SpeechInput
-        :topicId="mockTopic.id"
+        :topic-id="mockTopic.id"
         @submitted="handleSpeechSubmitted"
       />
     </div>
 
     <!-- 步骤2: 观众发言 -->
-    <div v-if="step === 2 && userStance === 3" class="step">
-      <div class="step-title">步骤2: 观众发言</div>
+    <div
+      v-if="step === 2 && userStance === 3"
+      class="step"
+    >
+      <div class="step-title">
+        步骤2: 观众发言
+      </div>
       <AudienceInput
-        :topicId="mockTopic.id"
-        :pendingCount="pendingCount"
+        :topic-id="mockTopic.id"
+        :pending-count="pendingCount"
         @submitted="handleSpeechSubmitted"
       />
     </div>
 
     <!-- 步骤3: 发言列表展示 -->
-    <div v-if="step >= 2" class="step">
-      <div class="step-title">步骤3: 发言展示（实时）</div>
-      <div v-if="speeches.length === 0" class="empty-tip">暂无发言</div>
-      <SpeechList v-else :speeches="speeches" />
-      <button @click="refreshSpeeches" class="refresh-btn">🔄 刷新发言</button>
+    <div
+      v-if="step >= 2"
+      class="step"
+    >
+      <div class="step-title">
+        步骤3: 发言展示（实时）
+      </div>
+      <div
+        v-if="speeches.length === 0"
+        class="empty-tip"
+      >
+        暂无发言
+      </div>
+      <SpeechList
+        v-else
+        :speeches="speeches"
+      />
+      <button
+        class="refresh-btn"
+        @click="refreshSpeeches"
+      >
+        🔄 刷新发言
+      </button>
     </div>
 
     <!-- 调试信息 -->
@@ -78,7 +111,12 @@
           <span class="value warning">{{ speeches.filter(s => s.audit_status === 0).length }}</span>
         </div>
       </div>
-      <button @click="resetFlow" class="reset-btn">🔄 重置流程</button>
+      <button
+        class="reset-btn"
+        @click="resetFlow"
+      >
+        🔄 重置流程
+      </button>
     </div>
   </div>
 </template>

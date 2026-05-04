@@ -2,27 +2,82 @@
   <div class="home">
     <div class="container">
       <h1>逆熵 - 理性辩论平台</h1>
-      <p class="subtitle">基于逻辑与理性的辩论社区</p>
+      <p class="subtitle">
+        基于逻辑与理性的辩论社区
+      </p>
       
-      <div v-if="!isLoggedIn" class="auth-section">
+      <div
+        v-if="!isLoggedIn"
+        class="auth-section"
+      >
         <div class="login-form">
           <h2>登录</h2>
-          <input v-model="loginAccount" placeholder="手机号/邮箱" />
-          <input v-model="loginPassword" type="password" placeholder="密码" />
-          <button @click="handleLogin">登录</button>
-          <button @click="$router.push('/register')" class="secondary">注册账号</button>
+          <input
+            v-model="loginAccount"
+            placeholder="手机号/邮箱"
+          >
+          <input
+            v-model="loginPassword"
+            type="password"
+            placeholder="密码"
+          >
+          <button @click="handleLogin">
+            登录
+          </button>
+          <p class="hint-text">
+            管理员：13900000001
+          </p>
+          <button
+            class="secondary"
+            @click="$router.push('/register')"
+          >
+            注册账号
+          </button>
         </div>
       </div>
       
-      <div v-else class="user-section">
+      <div
+        v-else
+        class="user-section"
+      >
         <p>欢迎回来，{{ user.name }}</p>
-        <button @click="$router.push('/profile')">个人中心</button>
-        <button @click="handleLogout" class="secondary">退出登录</button>
+        <button @click="$router.push('/profile')">
+          个人中心
+        </button>
+        <button
+          v-if="user.level === 4"
+          class="admin-btn"
+          @click="$router.push('/admin')"
+        >
+          管理后台
+        </button>
+        <button
+          class="secondary"
+          @click="handleLogout"
+        >
+          退出登录
+        </button>
       </div>
       
       <div class="nav-section">
-        <button @click="$router.push('/debates')" class="primary">浏览辩论</button>
-        <button @click="$router.push('/debates/create')" v-if="canCreate">发起辩论</button>
+        <button
+          class="primary"
+          @click="$router.push('/debates')"
+        >
+          浏览辩论
+        </button>
+        <button
+          v-if="canCreate"
+          @click="$router.push('/debates/create')"
+        >
+          发起辩论
+        </button>
+        <button
+          class="primary"
+          @click="$router.push('/rules')"
+        >
+          规则辩论
+        </button>
       </div>
     </div>
   </div>
@@ -30,20 +85,33 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import request from '@/api/request'
 import { USER_LEVEL } from '@/constants/userLevel'
+import { ElMessage } from 'element-plus'
+import request from '@/api/request'
 
-const router = useRouter()
 const loginAccount = ref('')
 const loginPassword = ref('')
 const user = ref(null)
 
-const isLoggedIn = computed(() => !!localStorage.getItem('token'))
+// 用 ref 替代 computed，使登录状态响应式
+const isLoggedIn = ref(false)
+
+// 初始化时从 localStorage 读取登录状态
+const initAuth = () => {
+  const token = localStorage.getItem('token')
+  isLoggedIn.value = !!token
+  if (token) {
+    const userStr = localStorage.getItem('user')
+    if (userStr) {
+      try { user.value = JSON.parse(userStr) } catch { user.value = null }
+    }
+  }
+}
+
 const canCreate = computed(() => user.value?.level >= USER_LEVEL.ADVANCED)
 
 const handleLogin = async () => {
-  if (!loginAccount.value) return alert('请输入账号')
+  if (!loginAccount.value) return ElMessage.warning('请输入账号')
   try {
     const res = await request.post('/auth/login', {
       account: loginAccount.value,
@@ -53,10 +121,13 @@ const handleLogin = async () => {
       localStorage.setItem('token', res.data.token)
       localStorage.setItem('user', JSON.stringify(res.data.user))
       user.value = res.data.user
-      alert('登录成功')
+      isLoggedIn.value = true
+      ElMessage.success('登录成功')
+    } else {
+      ElMessage.error(res.message || '登录失败')
     }
   } catch (err) {
-    alert('登录失败')
+    ElMessage.error(`登录失败：${err?.response?.data?.message || err.message}`)
   }
 }
 
@@ -64,11 +135,11 @@ const handleLogout = () => {
   localStorage.removeItem('token')
   localStorage.removeItem('user')
   user.value = null
+  isLoggedIn.value = false
 }
 
 onMounted(() => {
-  const userStr = localStorage.getItem('user')
-  if (userStr) user.value = JSON.parse(userStr)
+  initAuth()
 })
 </script>
 
@@ -169,5 +240,14 @@ button.secondary:hover {
 
 .user-section button {
   margin: 0 5px;
+}
+
+button.admin-btn {
+  background: #e74c3c;
+  color: white;
+}
+
+button.admin-btn:hover {
+  background: #c0392b;
 }
 </style>

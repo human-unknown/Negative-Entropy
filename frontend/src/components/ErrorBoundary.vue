@@ -1,13 +1,23 @@
 <template>
-  <div v-if="error" class="error-boundary">
+  <div
+    v-if="error"
+    class="error-boundary"
+  >
     <div class="error-content">
-      <div class="error-icon">⚠️</div>
+      <div class="error-icon">
+        ⚠️
+      </div>
       <h3>出错了</h3>
       <p>{{ error.message || '页面加载失败' }}</p>
-      <button @click="retry" class="retry-btn">重试</button>
+      <button
+        class="retry-btn"
+        @click="retry"
+      >
+        重试
+      </button>
     </div>
   </div>
-  <slot v-else></slot>
+  <slot v-else />
 </template>
 
 <script setup>

@@ -74,38 +74,7 @@ export const reviewReport = async (req, res) => {
     )
 
     if (action === 'approve' && report.target_type === 'user') {
-      const targetUserId = report.target_id
-
-      const [violationResult] = await conn.query(
-        'INSERT INTO user_violation (user_id, type, content, created_at) VALUES (?, ?, ?, NOW())',
-        [targetUserId, report.type, report.reason]
-      )
-
-      let expireAt = null
-      let durationMinutes = null
-
-      if (punishType === 2 || punishType === 3) {
-        if (duration && duration > 0) {
-          durationMinutes = duration * 24 * 60
-          expireAt = new Date(Date.now() + durationMinutes * 60 * 1000)
-        }
-      }
-
-      await conn.query(
-        'INSERT INTO user_punish (user_id, violation_id, type, duration, expire_at, created_at) VALUES (?, ?, ?, ?, ?, NOW())',
-        [targetUserId, violationResult.insertId, punishType, durationMinutes, expireAt]
-      )
-
-      if (punishType === 2) {
-        await conn.query('UPDATE user SET status = ? WHERE id = ?', ['muted', targetUserId])
-      } else if (punishType === 3) {
-        await conn.query('UPDATE user SET status = ? WHERE id = ?', ['banned', targetUserId])
-      }
-
-      await conn.query(
-        'INSERT INTO notification (user_id, type, content) VALUES (?, "system", ?)',
-        [targetUserId, `您因${report.type}被处罚`]
-      )
+      await applyUserPunishment(conn, report, punishType, duration)
     }
 
     await conn.commit()
@@ -123,7 +92,7 @@ export const getPendingReports = async (req, res) => {
   try {
     const [reports] = await pool.query(
       `SELECT r.id, r.target_type, r.target_id, r.type, r.reason, r.created_at,
-              u.username as reporter_name
+              u.name as reporter_name
        FROM report r
        JOIN user u ON r.user_id = u.id
        WHERE r.status = 0
@@ -135,4 +104,43 @@ export const getPendingReports = async (req, res) => {
     console.error('获取待审核举报失败:', err)
     res.json(error('获取失败', 500))
   }
+}
+
+/**
+ * 对举报用户执行处罚
+ * @private
+ */
+async function applyUserPunishment(conn, report, punishType, duration) {
+  const targetUserId = report.target_id
+
+  const [violationResult] = await conn.query(
+    'INSERT INTO user_violation (user_id, type, content, created_at) VALUES (?, ?, ?, NOW())',
+    [targetUserId, report.type, report.reason]
+  )
+
+  let expireAt = null
+  let durationMinutes = null
+
+  if (punishType === 2 || punishType === 3) {
+    if (duration && duration > 0) {
+      durationMinutes = duration * 24 * 60
+      expireAt = new Date(Date.now() + durationMinutes * 60 * 1000)
+    }
+  }
+
+  await conn.query(
+    'INSERT INTO user_punish (user_id, violation_id, type, duration, expire_at, created_at) VALUES (?, ?, ?, ?, ?, NOW())',
+    [targetUserId, violationResult.insertId, punishType, durationMinutes, expireAt]
+  )
+
+  if (punishType === 2) {
+    await conn.query('UPDATE user SET status = ? WHERE id = ?', ['muted', targetUserId])
+  } else if (punishType === 3) {
+    await conn.query('UPDATE user SET status = ? WHERE id = ?', ['banned', targetUserId])
+  }
+
+  await conn.query(
+    'INSERT INTO notification (user_id, type, content) VALUES (?, "system", ?)',
+    [targetUserId, `您因${report.type}被处罚`]
+  )
 }

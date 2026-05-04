@@ -1,4 +1,4 @@
-import db from '../config/database.js'
+import pool from '../config/database.js'
 import { success, error } from '../utils/response.js'
 import { autoEscalateViolation } from '../utils/violation.js'
 
@@ -12,7 +12,7 @@ export const getReviewQueue = async (req, res) => {
     const offset = (page - 1) * limit
 
     // 查询待复核内容
-    const [rows] = await db.query(
+    const [rows] = await pool.query(
       `SELECT 
         id,
         content,
@@ -33,7 +33,7 @@ export const getReviewQueue = async (req, res) => {
     )
 
     // 查询总数
-    const [countResult] = await db.query(
+    const [countResult] = await pool.query(
       'SELECT COUNT(*) as total FROM content_review_queue WHERE status = ?',
       [status]
     )
@@ -57,10 +57,10 @@ export const getReviewDetail = async (req, res) => {
   try {
     const { id } = req.params
 
-    const [rows] = await db.query(
+    const [rows] = await pool.query(
       `SELECT 
         crq.*,
-        u.username,
+        u.name,
         u.level
       FROM content_review_queue crq
       LEFT JOIN user u ON crq.user_id = u.id
@@ -83,7 +83,7 @@ export const getReviewDetail = async (req, res) => {
  * 通过复核
  */
 export const approveReview = async (req, res) => {
-  const connection = await db.getConnection()
+  const connection = await pool.getConnection()
   
   try {
     const { id } = req.params
@@ -147,7 +147,7 @@ export const approveReview = async (req, res) => {
  * 驳回复核
  */
 export const rejectReview = async (req, res) => {
-  const connection = await db.getConnection()
+  const connection = await pool.getConnection()
   
   try {
     const { id } = req.params
@@ -228,7 +228,7 @@ export const rejectReview = async (req, res) => {
  * 批量处理复核
  */
 export const batchReview = async (req, res) => {
-  const connection = await db.getConnection()
+  const connection = await pool.getConnection()
   
   try {
     const { ids, action, reason, note } = req.body

@@ -3,19 +3,20 @@
  * 禁止复制、右键、打印、截图
  */
 import { onMounted, onUnmounted } from 'vue'
+import { ElMessage } from 'element-plus'
 
 export const useContentProtection = () => {
   // 禁止复制
   const preventCopy = (e) => {
     e.preventDefault()
-    alert('禁止复制站内内容')
+    ElMessage.warning('禁止复制站内内容')
     return false
   }
 
   // 禁止右键
   const preventContextMenu = (e) => {
     e.preventDefault()
-    alert('禁止使用右键菜单')
+    ElMessage.warning('禁止使用右键菜单')
     return false
   }
 
@@ -36,20 +37,20 @@ export const useContentProtection = () => {
     // Ctrl+P / Cmd+P (打印)
     if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
       e.preventDefault()
-      alert('禁止打印')
+      ElMessage.warning('禁止打印')
       return false
     }
     
     // PrintScreen / Cmd+Shift+3/4 (截图)
     if (e.key === 'PrintScreen' || 
         ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === '3' || e.key === '4'))) {
-      alert('禁止截图')
+      ElMessage.warning('禁止截图')
     }
 
     // Ctrl+S / Cmd+S (保存)
     if ((e.ctrlKey || e.metaKey) && e.key === 's') {
       e.preventDefault()
-      alert('禁止保存页面')
+      ElMessage.warning('禁止保存页面')
       return false
     }
 

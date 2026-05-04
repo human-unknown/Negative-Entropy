@@ -1,3 +1,5 @@
+import { ElMessage } from 'element-plus'
+
 export const handleResponse = (promise, successMsg) => {
   return promise
     .then(data => {

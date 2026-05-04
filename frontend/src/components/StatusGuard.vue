@@ -1,12 +1,15 @@
 <template>
   <div class="status-guard">
-    <div v-if="!canPerform" class="blocked-overlay">
+    <div
+      v-if="!canPerform"
+      class="blocked-overlay"
+    >
       <div class="blocked-message">
         <span class="icon">🚫</span>
         <p>{{ tipMessage }}</p>
       </div>
     </div>
-    <slot v-else></slot>
+    <slot v-else />
   </div>
 </template>
 

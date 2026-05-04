@@ -1,18 +1,24 @@
 <template>
   <div class="security-settings">
-    <h2 class="section-title">账号安全</h2>
+    <h2 class="section-title">
+      账号安全
+    </h2>
     
     <div class="security-item">
       <div class="item-info">
-        <h3 class="item-title">双重认证</h3>
-        <p class="item-desc">开启后登录需要验证码，提高账号安全性</p>
+        <h3 class="item-title">
+          双重认证
+        </h3>
+        <p class="item-desc">
+          开启后登录需要验证码，提高账号安全性
+        </p>
       </div>
       <div class="item-action">
         <button 
           class="toggle-btn" 
           :class="{ active: twoFactorEnabled }"
-          @click="toggle2FA"
           :disabled="loading"
+          @click="toggle2FA"
         >
           {{ twoFactorEnabled ? '已开启' : '已关闭' }}
         </button>
@@ -21,21 +27,39 @@
 
     <div class="security-item">
       <div class="item-info">
-        <h3 class="item-title">修改密码</h3>
-        <p class="item-desc">定期修改密码可提高账号安全</p>
+        <h3 class="item-title">
+          修改密码
+        </h3>
+        <p class="item-desc">
+          定期修改密码可提高账号安全
+        </p>
       </div>
       <div class="item-action">
-        <button class="action-btn" @click="$router.push('/reset-password')">
+        <button
+          class="action-btn"
+          @click="$router.push('/reset-password')"
+        >
           去修改
         </button>
       </div>
     </div>
 
     <!-- 验证码弹窗 -->
-    <div v-if="showVerifyModal" class="modal-overlay" @click="closeModal">
-      <div class="modal-content" @click.stop>
-        <h3 class="modal-title">验证身份</h3>
-        <p class="modal-desc">验证码已发送至您的{{ userContact }}</p>
+    <div
+      v-if="showVerifyModal"
+      class="modal-overlay"
+      @click="closeModal"
+    >
+      <div
+        class="modal-content"
+        @click.stop
+      >
+        <h3 class="modal-title">
+          验证身份
+        </h3>
+        <p class="modal-desc">
+          验证码已发送至您的{{ userContact }}
+        </p>
         
         <input 
           v-model="verifyCode"
@@ -43,11 +67,20 @@
           placeholder="请输入验证码"
           class="verify-input"
           maxlength="6"
-        />
+        >
         
         <div class="modal-actions">
-          <button class="modal-btn cancel" @click="closeModal">取消</button>
-          <button class="modal-btn confirm" @click="confirmToggle" :disabled="!verifyCode || verifying">
+          <button
+            class="modal-btn cancel"
+            @click="closeModal"
+          >
+            取消
+          </button>
+          <button
+            class="modal-btn confirm"
+            :disabled="!verifyCode || verifying"
+            @click="confirmToggle"
+          >
             确认
           </button>
         </div>

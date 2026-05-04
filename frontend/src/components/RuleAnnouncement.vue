@@ -2,7 +2,10 @@
   <div class="rule-announcement">
     <div class="announcement-header">
       <h1>规则修改公示</h1>
-      <div class="status-badge" :class="result.final_decision">
+      <div
+        class="status-badge"
+        :class="result.final_decision"
+      >
         {{ result.final_decision === 'approved' ? '已通过' : '已拒绝' }}
       </div>
     </div>
@@ -10,17 +13,23 @@
     <div class="announcement-content">
       <section class="section">
         <h2>修改标题</h2>
-        <p class="title-text">{{ debate.title }}</p>
+        <p class="title-text">
+          {{ debate.title }}
+        </p>
       </section>
 
       <section class="section">
         <h2>现状说明</h2>
-        <p class="content-text">{{ debate.current_status }}</p>
+        <p class="content-text">
+          {{ debate.current_status }}
+        </p>
       </section>
 
       <section class="section">
         <h2>修改内容</h2>
-        <p class="content-text">{{ debate.modify_content }}</p>
+        <p class="content-text">
+          {{ debate.modify_content }}
+        </p>
       </section>
 
       <section class="section">
@@ -39,12 +48,19 @@
 
       <section class="section">
         <h2>最终结论</h2>
-        <p class="conclusion-text">{{ result.conclusion }}</p>
+        <p class="conclusion-text">
+          {{ result.conclusion }}
+        </p>
       </section>
 
-      <section class="section" v-if="result.final_decision === 'approved'">
+      <section
+        v-if="result.final_decision === 'approved'"
+        class="section"
+      >
         <h2>生效时间</h2>
-        <p class="effective-time">{{ effectiveTime }}</p>
+        <p class="effective-time">
+          {{ effectiveTime }}
+        </p>
       </section>
 
       <div class="footer">

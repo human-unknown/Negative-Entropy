@@ -128,7 +128,7 @@ class AIAuditService {
 }
 
 // 创建单例
-const aiAuditService = new AIAuditService()
+export const aiAuditService = new AIAuditService()
 
 /**
  * AI审核中间件

@@ -1,26 +1,48 @@
 <template>
   <div class="profile-container">
     <div class="profile-header">
-      <h1 class="profile-title">个人中心</h1>
+      <h1 class="profile-title">
+        个人中心
+      </h1>
     </div>
 
     <div class="profile-content">
       <aside class="profile-sidebar">
         <nav class="profile-nav">
           <ul class="nav-list">
-            <li class="nav-item" :class="{ active: activeTab === 'info' }" @click="activeTab = 'info'">
+            <li
+              class="nav-item"
+              :class="{ active: activeTab === 'info' }"
+              @click="activeTab = 'info'"
+            >
               <span class="nav-text">基本信息</span>
             </li>
-            <li class="nav-item" :class="{ active: activeTab === 'debates' }" @click="activeTab = 'debates'">
+            <li
+              class="nav-item"
+              :class="{ active: activeTab === 'debates' }"
+              @click="activeTab = 'debates'"
+            >
               <span class="nav-text">我的辩论</span>
             </li>
-            <li class="nav-item" :class="{ active: activeTab === 'stats' }" @click="activeTab = 'stats'">
+            <li
+              class="nav-item"
+              :class="{ active: activeTab === 'stats' }"
+              @click="activeTab = 'stats'"
+            >
               <span class="nav-text">数据统计</span>
             </li>
-            <li class="nav-item" :class="{ active: activeTab === 'security' }" @click="activeTab = 'security'">
+            <li
+              class="nav-item"
+              :class="{ active: activeTab === 'security' }"
+              @click="activeTab = 'security'"
+            >
               <span class="nav-text">账号安全</span>
             </li>
-            <li class="nav-item" :class="{ active: activeTab === 'settings' }" @click="activeTab = 'settings'">
+            <li
+              class="nav-item"
+              :class="{ active: activeTab === 'settings' }"
+              @click="activeTab = 'settings'"
+            >
               <span class="nav-text">系统设置</span>
             </li>
           </ul>
@@ -30,7 +52,12 @@
       <main class="profile-main">
         <div class="content-wrapper">
           <SecuritySettings v-if="activeTab === 'security'" />
-          <div v-else class="placeholder">{{ activeTab }} 功能开发中...</div>
+          <div
+            v-else
+            class="placeholder"
+          >
+            {{ activeTab }} 功能开发中...
+          </div>
         </div>
       </main>
     </div>

@@ -3,28 +3,64 @@
     <div class="result-container">
       <h1>审核结果</h1>
       
-      <div v-if="loading" class="loading">加载中...</div>
+      <div
+        v-if="loading"
+        class="loading"
+      >
+        加载中...
+      </div>
       
-      <div v-else-if="result" class="result-content">
-        <div v-if="result.status === 'passed'" class="status-box success">
-          <div class="icon">✓</div>
+      <div
+        v-else-if="result"
+        class="result-content"
+      >
+        <div
+          v-if="result.status === 'passed'"
+          class="status-box success"
+        >
+          <div class="icon">
+            ✓
+          </div>
           <h2>审核通过</h2>
           <p>{{ result.message }}</p>
-          <button @click="goHome" class="action-btn">进入首页</button>
+          <button
+            class="action-btn"
+            @click="goHome"
+          >
+            进入首页
+          </button>
         </div>
         
-        <div v-else-if="result.status === 'failed'" class="status-box failed">
-          <div class="icon">✗</div>
+        <div
+          v-else-if="result.status === 'failed'"
+          class="status-box failed"
+        >
+          <div class="icon">
+            ✗
+          </div>
           <h2>审核未通过</h2>
           <p>{{ result.message }}</p>
-          <p v-if="result.retryCount" class="retry-info">已尝试 {{ result.retryCount }} 次</p>
-          <p v-if="result.limitUntil" class="limit-info">
+          <p
+            v-if="result.retryCount"
+            class="retry-info"
+          >
+            已尝试 {{ result.retryCount }} 次
+          </p>
+          <p
+            v-if="result.limitUntil"
+            class="limit-info"
+          >
             限制至：{{ new Date(result.limitUntil).toLocaleString() }}
           </p>
         </div>
         
-        <div v-else-if="result.status === 'incomplete'" class="status-box incomplete">
-          <div class="icon">!</div>
+        <div
+          v-else-if="result.status === 'incomplete'"
+          class="status-box incomplete"
+        >
+          <div class="icon">
+            !
+          </div>
           <h2>审核未完成</h2>
           <p>{{ result.message }}</p>
           <div class="scores">
@@ -33,11 +69,19 @@
           </div>
         </div>
         
-        <div v-else-if="result.status === 'limited'" class="status-box limited">
-          <div class="icon">⚠</div>
+        <div
+          v-else-if="result.status === 'limited'"
+          class="status-box limited"
+        >
+          <div class="icon">
+            ⚠
+          </div>
           <h2>账号受限</h2>
           <p>{{ result.message }}</p>
-          <p v-if="result.limitUntil" class="limit-info">
+          <p
+            v-if="result.limitUntil"
+            class="limit-info"
+          >
             限制至：{{ new Date(result.limitUntil).toLocaleString() }}
           </p>
         </div>
@@ -48,6 +92,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
 import { useRouter, useRoute } from 'vue-router'
 import request from '@/api/request'
 
@@ -64,10 +109,10 @@ onMounted(async () => {
     if (res.code === 200) {
       result.value = res.data
     } else {
-      alert(res.message || '查询失败')
+      ElMessage.error(res.message || '查询失败')
     }
   } catch (error) {
-    alert('查询失败，请重试')
+    ElMessage.error('查询失败，请重试')
   } finally {
     loading.value = false
   }

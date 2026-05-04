@@ -1,13 +1,15 @@
 import { success, error } from '../utils/response.js'
 import pool from '../config/database.js'
 import { checkAndUpgradeLevel } from '../utils/levelUpgrade.js'
+import { LEVEL_THRESHOLDS } from '../constants/levelThresholds.js'
+import { USER_LEVEL_TEXT } from '../constants/userLevel.js'
 
 const surnames = ['王', '李', '张', '刘', '陈', '杨', '黄', '赵', '周', '吴', '徐', '孙', '朱', '马', '胡', '郭', '林', '何', '高', '梁', '郑', '罗', '宋', '谢', '唐', '韩', '曹', '许', '邓', '萧', '冯', '曾', '程', '蔡', '彭', '潘', '袁', '于', '董', '余', '苏', '叶', '吕', '魏', '蒋', '田', '杜', '丁', '沈', '姜', '范', '江', '傅', '钟', '卢', '汪', '戴', '崔', '任', '陆', '廖', '姚', '方', '金', '邱', '夏', '谭', '韦', '贾', '邹', '石', '熊', '孟', '秦', '阎', '薛', '侯', '雷', '白', '龙', '段', '郝', '孔', '邵', '史', '毛', '常', '万', '顾', '赖', '武', '康', '贺', '严', '尹', '钱', '施', '牛', '洪', '龚']
 
 const invalidPatterns = [
   { regex: /[0-9]/, reason: '不得包含数字' },
   { regex: /[a-zA-Z]{2,}/, reason: '不得包含连续英文字母' },
-  { regex: /[!@#$%^&*()_+=\[\]{};':"\\|,.<>?\/~`]/, reason: '不得包含特殊符号' },
+  { regex: /[!@#$%^&*()_+=[\]{};':"\\|,.<>?/~`]/, reason: '不得包含特殊符号' },
   { regex: /(.)\1{2,}/, reason: '不得包含重复字符' },
   { regex: /^.{10,}$/, reason: '姓名过长' },
   { regex: /^.$/, reason: '姓名过短' }
@@ -100,7 +102,8 @@ export const updatePhone = async (req, res) => {
 
     res.json(success({ message: '手机号修改成功' }))
   } catch (err) {
-    await conn.rollback()
+    console.error('修改手机号失败:', err)
+    try { await conn.rollback() } catch (_) { /* 连接可能已关闭 */ }
     res.json(error('修改失败', 500))
   } finally {
     conn.release()
@@ -137,7 +140,8 @@ export const updateEmail = async (req, res) => {
 
     res.json(success({ message: '邮箱修改成功' }))
   } catch (err) {
-    await conn.rollback()
+    console.error('修改邮箱失败:', err)
+    try { await conn.rollback() } catch (_) { /* 连接可能已关闭 */ }
     res.json(error('修改失败', 500))
   } finally {
     conn.release()
@@ -154,11 +158,11 @@ export const getUserDebates = async (req, res) => {
     const [debates] = await conn.query(
       `SELECT
         dt.id, dt.title, dt.status, dt.created_at,
-        dp.stance, dp.role,
-        dr.winner_stance, dr.final_score_for, dr.final_score_against
+        dp.stance,
+        dr.pro_votes, dr.con_votes, dr.winner, dr.summary
       FROM debate_participant dp
-      JOIN debate_topic dt ON dp.debate_id = dt.id
-      LEFT JOIN debate_result dr ON dt.id = dr.debate_id
+      JOIN debate_topic dt ON dp.topic_id = dt.id
+      LEFT JOIN debate_result dr ON dt.id = dr.topic_id
       WHERE dp.user_id = ?
       ORDER BY dt.created_at DESC
       LIMIT ? OFFSET ?`,
@@ -172,8 +176,96 @@ export const getUserDebates = async (req, res) => {
 
     res.json(success({ debates, total: total[0].count, page: parseInt(page), limit: parseInt(limit) }))
   } catch (err) {
+    console.error('查询辩论历史失败:', err)
     res.json(error('查询失败', 500))
   } finally {
     conn.release()
+  }
+}
+
+/**
+ * 获取当前用户的经验记录
+ * GET /api/user/exp
+ */
+export const getExpHistory = async (req, res) => {
+  try {
+    const userId = req.user?.id || req.user?.userId
+    const { page = 1, limit = 20 } = req.query
+    const offset = (page - 1) * limit
+
+    const [rows] = await pool.query(
+      `SELECT id, exp, reason, created_at
+       FROM user_exp
+       WHERE user_id = ?
+       ORDER BY created_at DESC
+       LIMIT ? OFFSET ?`,
+      [userId, parseInt(limit), parseInt(offset)]
+    )
+
+    const [countResult] = await pool.query(
+      'SELECT COUNT(*) as total FROM user_exp WHERE user_id = ?',
+      [userId]
+    )
+
+    res.json(success({
+      list: rows,
+      total: countResult[0].total,
+      page: parseInt(page),
+      limit: parseInt(limit)
+    }))
+  } catch (err) {
+    console.error('获取经验记录失败:', err)
+    res.json(error('获取经验记录失败', 500))
+  }
+}
+
+/**
+ * 获取当前用户的等级信息（含晋升进度）
+ * GET /api/user/level
+ */
+export const getLevelInfo = async (req, res) => {
+  try {
+    const userId = req.user?.id || req.user?.userId
+
+    const [users] = await pool.query(
+      'SELECT id, level, exp FROM user WHERE id = ?',
+      [userId]
+    )
+
+    if (!users.length) {
+      return res.json(error('用户不存在', 404))
+    }
+
+    const user = users[0]
+    const currentLevel = user.level
+    const currentExp = user.exp
+
+    // 当前等级阈值
+    const currentThreshold = LEVEL_THRESHOLDS[currentLevel] || 0
+
+    // 下一级阈值
+    const nextLevel = currentLevel + 1
+    const nextThreshold = LEVEL_THRESHOLDS[nextLevel]
+
+    // 晋升进度
+    let progress = null
+    if (nextThreshold && currentThreshold !== undefined) {
+      const range = nextThreshold - currentThreshold
+      const gained = currentExp - currentThreshold
+      progress = range > 0 ? Math.min(Math.round((gained / range) * 100), 100) : 0
+    }
+
+    res.json(success({
+      level: currentLevel,
+      levelText: USER_LEVEL_TEXT[currentLevel] || '未知',
+      exp: currentExp,
+      currentThreshold,
+      nextThreshold: nextThreshold || null,
+      progress,
+      nextLevelText: nextThreshold ? (USER_LEVEL_TEXT[nextLevel] || '未知') : null
+    }))
+  } catch (err) {
+    console.error('获取等级信息失败:', err)
+    res.json(error('获取等级信息失败', 500))
   }
 }

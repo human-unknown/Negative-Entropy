@@ -61,7 +61,8 @@ class WatermarkService {
     }
 
     // 提取所有零宽字符
-    const zeroWidthChars = content.match(/[\u200B\u200C\u200D\uFEFF]/g)
+    // 注意: 不使用字符类以避免 no-misleading-character-class 误报
+    const zeroWidthChars = content.match(/\u200B|\u200C|\u200D|\uFEFF/g)
     
     if (!zeroWidthChars || zeroWidthChars.length === 0) {
       return null
@@ -88,7 +89,7 @@ class WatermarkService {
     }
 
     // 移除所有零宽字符
-    return content.replace(/[\u200B\u200C\u200D\uFEFF]/g, '')
+    return content.replace(/\u200B|\u200C|\u200D|\uFEFF/g, '')
   }
 
   /**

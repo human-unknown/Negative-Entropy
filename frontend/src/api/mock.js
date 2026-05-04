@@ -1,8 +1,21 @@
 // Mock数据服务
-let mockUsers = []
+const mockUsers = []
+
+// 预置管理员账号
+mockUsers.push({
+  id: 999,
+  name: '管理员',
+  phone: '13900000001',
+  email: 'admin@negentropy.com',
+  level: 4,
+  exp: 99999,
+  status: 1,
+  created_at: new Date().toISOString()
+})
+
 let mockDebates = []
 let mockSpeeches = []
-let mockVotes = []
+const mockVotes = []
 let currentUserId = null
 
 // 初始化mock数据
@@ -76,6 +89,20 @@ const initMockData = () => {
 
 initMockData()
 
+let mockRules = null
+const mockRuleDebates = []
+let currentRuleDebateId = 0
+
+const getMockRules = () => {
+  if (mockRules) return mockRules
+  mockRules = [
+    { id: 1, title: '辩论发言规则', content: '每位辩手单次发言字数10-500字，发言间隔60秒', version: 2, updated_at: new Date().toISOString() },
+    { id: 2, title: '投票权重规则', content: '普通用户权重1.0，进阶用户1.0，资深用户1.5，管理员2.0', version: 1, updated_at: new Date(Date.now() - 86400000).toISOString() },
+    { id: 3, title: '用户等级规则', content: '入门(1)、进阶(2)、资深(3)、管理员(4)，通过逻辑测试和辩论考核可升级', version: 3, updated_at: new Date(Date.now() - 172800000).toISOString() }
+  ]
+  return mockRules
+}
+
 export const mockApi = {
   // 注册
   register: async (data) => {
@@ -110,7 +137,7 @@ export const mockApi = {
       return { 
         code: 200, 
         data: { 
-          token: 'mock-token-' + newUser.id,
+          token: `mock-token-${  newUser.id}`,
           user: newUser
         }
       }
@@ -119,7 +146,7 @@ export const mockApi = {
     return { 
       code: 200, 
       data: { 
-        token: 'mock-token-' + user.id,
+        token: `mock-token-${  user.id}`,
         user
       }
     }
@@ -266,7 +293,8 @@ export const mockApi = {
   },
 
   // 提交逻辑测试
-  submitLogicTest: async (data) => {
+  // eslint-disable-next-line no-unused-vars
+  submitLogicTest: async (_data) => {
     const correct = Math.floor(Math.random() * 2) + 3
     const total = 5
     const score = Math.floor((correct / total) * 100)
@@ -280,7 +308,8 @@ export const mockApi = {
   },
 
   // 提交辩论测试
-  submitDebateTest: async (data) => {
+  // eslint-disable-next-line no-unused-vars
+  submitDebateTest: async (_data) => {
     const logicScore = Math.floor(Math.random() * 20) + 70
     const rationalScore = Math.floor(Math.random() * 20) + 70
     const score = Math.floor((logicScore + rationalScore) / 2)
@@ -288,7 +317,8 @@ export const mockApi = {
   },
 
   // 获取审核结果
-  getCheckResult: async (userId) => {
+  // eslint-disable-next-line no-unused-vars
+  getCheckResult: async (_userId) => {
     return {
       code: 200,
       data: {
@@ -298,5 +328,38 @@ export const mockApi = {
         debateScore: 78
       }
     }
+  },
+
+  // 规则管理
+  getRules: async () => {
+    return { code: 200, data: { list: getMockRules() } }
+  },
+
+  saveRule: async (data) => {
+    const rules = getMockRules()
+    const idx = rules.findIndex(r => r.id === data.id)
+    if (idx >= 0) {
+      rules[idx] = { ...rules[idx], ...data, updated_at: new Date().toISOString(), version: rules[idx].version + 1 }
+    } else {
+      const newRule = { ...data, id: rules.length + 1, version: 1, updated_at: new Date().toISOString() }
+      rules.push(newRule)
+    }
+    return { code: 200, message: '规则已保存' }
+  },
+
+  // 规则辩论
+  createRuleDebate: async (data) => {
+    currentRuleDebateId++
+    const debate = {
+      id: currentRuleDebateId,
+      ...data,
+      status: 0,
+      creator_id: currentUserId,
+      created_at: new Date().toISOString(),
+      yes_count: 0,
+      no_count: 0
+    }
+    mockRuleDebates.push(debate)
+    return { code: 200, data: { debateId: debate.id } }
   }
 }

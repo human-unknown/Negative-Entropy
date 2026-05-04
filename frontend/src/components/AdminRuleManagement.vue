@@ -1,24 +1,39 @@
 <template>
   <div class="rule-management">
     <div class="action-bar">
-      <button class="btn-primary" @click="showDebateModal = true">
+      <button
+        class="btn-primary"
+        @click="showDebateModal = true"
+      >
         🗳️ 发起规则修改辩论
       </button>
     </div>
 
-    <div v-if="rules.length > 0" class="rule-list">
+    <div
+      v-if="rules.length > 0"
+      class="rule-list"
+    >
       <div
         v-for="rule in rules"
         :key="rule.id"
         class="rule-card"
       >
         <div class="rule-header">
-          <h3 class="rule-title">{{ rule.title }}</h3>
-          <button class="btn-edit" @click="editRule(rule)">✏️ 编辑</button>
+          <h3 class="rule-title">
+            {{ rule.title }}
+          </h3>
+          <button
+            class="btn-edit"
+            @click="editRule(rule)"
+          >
+            ✏️ 编辑
+          </button>
         </div>
         
         <div class="rule-content">
-          <div class="rule-text">{{ rule.content }}</div>
+          <div class="rule-text">
+            {{ rule.content }}
+          </div>
           <div class="rule-meta">
             <span class="meta-item">版本：v{{ rule.version }}</span>
             <span class="meta-item">更新时间：{{ formatDate(rule.updated_at) }}</span>
@@ -27,22 +42,46 @@
       </div>
     </div>
 
-    <div v-else class="no-data">
+    <div
+      v-else
+      class="no-data"
+    >
       暂无规则
     </div>
 
-    <div v-if="showDebateModal" class="modal-overlay" @click="closeDebateModal">
-      <div class="modal-content" @click.stop>
+    <div
+      v-if="showDebateModal"
+      class="modal-overlay"
+      @click="closeDebateModal"
+    >
+      <div
+        class="modal-content"
+        @click.stop
+      >
         <div class="modal-header">
           <h3>发起规则修改辩论</h3>
-          <button class="close-btn" @click="closeDebateModal">✕</button>
+          <button
+            class="close-btn"
+            @click="closeDebateModal"
+          >
+            ✕
+          </button>
         </div>
         <div class="modal-body">
           <div class="form-group">
             <label>选择规则：</label>
-            <select v-model="debateForm.ruleId" class="form-select">
-              <option value="">请选择</option>
-              <option v-for="rule in rules" :key="rule.id" :value="rule.id">
+            <select
+              v-model="debateForm.ruleId"
+              class="form-select"
+            >
+              <option value="">
+                请选择
+              </option>
+              <option
+                v-for="rule in rules"
+                :key="rule.id"
+                :value="rule.id"
+              >
                 {{ rule.title }}
               </option>
             </select>
@@ -54,7 +93,7 @@
               placeholder="请描述规则修改提案"
               rows="4"
               class="form-textarea"
-            ></textarea>
+            />
           </div>
           <div class="form-group">
             <label>修改理由：</label>
@@ -63,21 +102,43 @@
               placeholder="请说明修改理由"
               rows="4"
               class="form-textarea"
-            ></textarea>
+            />
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn-cancel" @click="closeDebateModal">取消</button>
-          <button class="btn-confirm" @click="submitDebate">发起辩论</button>
+          <button
+            class="btn-cancel"
+            @click="closeDebateModal"
+          >
+            取消
+          </button>
+          <button
+            class="btn-confirm"
+            @click="submitDebate"
+          >
+            发起辩论
+          </button>
         </div>
       </div>
     </div>
 
-    <div v-if="showEditModal" class="modal-overlay" @click="closeEditModal">
-      <div class="modal-content" @click.stop>
+    <div
+      v-if="showEditModal"
+      class="modal-overlay"
+      @click="closeEditModal"
+    >
+      <div
+        class="modal-content"
+        @click.stop
+      >
         <div class="modal-header">
           <h3>编辑规则</h3>
-          <button class="close-btn" @click="closeEditModal">✕</button>
+          <button
+            class="close-btn"
+            @click="closeEditModal"
+          >
+            ✕
+          </button>
         </div>
         <div class="modal-body">
           <div class="form-group">
@@ -87,7 +148,7 @@
               type="text"
               class="form-input"
               placeholder="规则标题"
-            />
+            >
           </div>
           <div class="form-group">
             <label>规则内容：</label>
@@ -96,12 +157,22 @@
               rows="8"
               class="form-textarea"
               placeholder="规则内容"
-            ></textarea>
+            />
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn-cancel" @click="closeEditModal">取消</button>
-          <button class="btn-confirm" @click="saveRule">保存</button>
+          <button
+            class="btn-cancel"
+            @click="closeEditModal"
+          >
+            取消
+          </button>
+          <button
+            class="btn-confirm"
+            @click="saveRule"
+          >
+            保存
+          </button>
         </div>
       </div>
     </div>
@@ -110,6 +181,8 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import request from '@/api/request'
 
 const rules = ref([])
 const showDebateModal = ref(false)
@@ -129,9 +202,15 @@ onMounted(() => {
   loadRules()
 })
 
-const loadRules = () => {
-  console.log('加载规则列表')
-  // TODO: 调用API获取规则列表
+const loadRules = async () => {
+  try {
+    const res = await request.get('/admin/rules')
+    if (res.code === 200) {
+      rules.value = res.data.list || []
+    }
+  } catch (err) {
+    console.error('加载规则列表失败:', err)
+  }
 }
 
 const editRule = (rule) => {
@@ -153,23 +232,42 @@ const closeEditModal = () => {
   editForm.value = { id: null, title: '', content: '' }
 }
 
-const submitDebate = () => {
+const submitDebate = async () => {
   if (!debateForm.value.ruleId || !debateForm.value.proposal || !debateForm.value.reason) {
-    alert('请填写完整信息')
+    ElMessage.warning('请填写完整信息')
     return
   }
-  console.log('发起规则修改辩论:', debateForm.value)
-  // TODO: 调用API发起辩论
+  try {
+    const selectedRule = rules.value.find(r => r.id === parseInt(debateForm.value.ruleId))
+    const res = await request.post('/admin/rule-debates', {
+      title: `规则修改：${selectedRule?.title || debateForm.value.ruleId}`,
+      currentStatus: selectedRule?.content || '',
+      modifyContent: debateForm.value.proposal,
+      reason: debateForm.value.reason,
+      duration: 7
+    })
+    if (res.code === 200) {
+      ElMessage.success('规则修改辩论已发起')
+    }
+  } catch (err) {
+    ElMessage.error('发起失败')
+  }
   closeDebateModal()
 }
 
-const saveRule = () => {
+const saveRule = async () => {
   if (!editForm.value.title || !editForm.value.content) {
-    alert('请填写完整信息')
+    ElMessage.warning('请填写完整信息')
     return
   }
-  console.log('保存规则:', editForm.value)
-  // TODO: 调用API保存规则
+  try {
+    const res = await request.post('/admin/rules', editForm.value)
+    if (res.code === 200) {
+      ElMessage.success('规则已保存')
+    }
+  } catch (err) {
+    ElMessage.error('保存失败')
+  }
   closeEditModal()
   loadRules()
 }

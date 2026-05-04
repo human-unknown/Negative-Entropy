@@ -1,6 +1,5 @@
 import pool from '../config/database.js'
 import { success, error } from '../utils/response.js'
-import { USER_LEVEL } from '../constants/userLevel.js'
 
 export const submitAppeal = async (req, res) => {
   try {
@@ -96,7 +95,7 @@ export const getPendingAppeals = async (req, res) => {
   try {
     const [appeals] = await pool.query(
       `SELECT a.id, a.user_id, a.punish_id, a.reason, a.created_at,
-              u.username, p.type as punish_type
+              u.name, p.type as punish_type
        FROM appeal a
        JOIN user u ON a.user_id = u.id
        JOIN user_punish p ON a.punish_id = p.id

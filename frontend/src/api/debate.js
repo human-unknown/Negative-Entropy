@@ -5,45 +5,45 @@ export const getDebateList = (params) => {
 }
 
 export const getDebateCategories = () => {
-  return request.get('/debates/categories')
+  return request.get('/debate/categories')
 }
 
 export const getDebateDetail = (topicId) => {
-  return request.get(`/debates/topics/${topicId}`)
+  return request.get(`/debate/topics/${topicId}`)
 }
 
 export const getSpeeches = (topicId, role) => {
-  return request.get(`/debates/topics/${topicId}/speeches`, { params: { role } })
+  return request.get(`/debate/topics/${topicId}/speeches`, { params: { role } })
 }
 
 export const createDebate = (data) => {
-  return request.post('/debates/topics', data)
+  return request.post('/debate/topics', data)
 }
 
 export const joinDebate = (topicId, stance) => {
-  return request.post(`/debates/topics/${topicId}/join`, { stance })
+  return request.post(`/debate/topics/${topicId}/join`, { stance })
 }
 
 export const createSpeech = (topicId, content) => {
-  return request.post(`/debates/topics/${topicId}/speeches`, { content })
+  return request.post(`/debate/topics/${topicId}/speeches`, { content })
 }
 
 export const createAudienceSpeech = (topicId, data) => {
-  return request.post(`/debates/topics/${topicId}/audience-speeches`, data)
+  return request.post(`/debate/topics/${topicId}/audience-speeches`, data)
 }
 
 export const voteDebate = (topicId, stance) => {
-  return request.post(`/debates/topics/${topicId}/vote`, { stance })
+  return request.post(`/debate/topics/${topicId}/vote`, { stance })
 }
 
 export const closeDebate = (topicId) => {
-  return request.post(`/debates/topics/${topicId}/close`)
+  return request.post(`/debate/topics/${topicId}/close`)
 }
 
 export const settleDebate = (topicId) => {
-  return request.post(`/debates/topics/${topicId}/settle`)
+  return request.post(`/debate/topics/${topicId}/settle`)
 }
 
 export const getDebateResult = (topicId) => {
-  return request.get(`/debates/topics/${topicId}/result`)
+  return request.get(`/debate/topics/${topicId}/result`)
 }

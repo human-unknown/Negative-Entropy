@@ -12,9 +12,21 @@
         </button>
       </div>
       <div class="search-box">
-        <input v-model="keyword" @keyup.enter="loadDebates" placeholder="搜索辩论话题..." />
-        <button @click="loadDebates">搜索</button>
-        <button v-if="canCreate" class="create-btn" @click="$router.push('/debates/create')">发布话题</button>
+        <input
+          v-model="keyword"
+          placeholder="搜索辩论话题..."
+          @keyup.enter="loadDebates"
+        >
+        <button @click="loadDebates">
+          搜索
+        </button>
+        <button
+          v-if="canCreate"
+          class="create-btn"
+          @click="$router.push('/debates/create')"
+        >
+          发布话题
+        </button>
       </div>
     </div>
 
@@ -32,13 +44,25 @@
     </div>
 
     <div class="list">
-      <div v-for="item in list" :key="item.id" class="card" @click="goToDebate(item.id)">
+      <div
+        v-for="item in list"
+        :key="item.id"
+        class="card"
+        @click="goToDebate(item.id)"
+      >
         <div class="card-header">
           <span class="category-tag">{{ getCategoryLabel(item.category) }}</span>
-          <span class="status-tag" :class="`status-${item.status}`">{{ getStatusLabel(item.status) }}</span>
+          <span
+            class="status-tag"
+            :class="`status-${item.status}`"
+          >{{ getStatusLabel(item.status) }}</span>
         </div>
-        <h3 class="title">{{ item.title }}</h3>
-        <p class="desc">{{ item.description }}</p>
+        <h3 class="title">
+          {{ item.title }}
+        </h3>
+        <p class="desc">
+          {{ item.description }}
+        </p>
         <div class="card-footer">
           <span>👤 {{ item.publisher_name || '匿名' }}</span>
           <span>👥 {{ item.participant_count || 0 }}人参与</span>
@@ -49,9 +73,19 @@
     </div>
 
     <div class="pagination">
-      <button :disabled="page === 1" @click="page--; loadDebates()">上一页</button>
+      <button
+        :disabled="page === 1"
+        @click="page--; loadDebates()"
+      >
+        上一页
+      </button>
       <span>{{ page }} / {{ totalPages }}</span>
-      <button :disabled="page >= totalPages" @click="page++; loadDebates()">下一页</button>
+      <button
+        :disabled="page >= totalPages"
+        @click="page++; loadDebates()"
+      >
+        下一页
+      </button>
     </div>
   </div>
 </template>

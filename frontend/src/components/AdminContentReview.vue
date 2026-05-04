@@ -7,14 +7,19 @@
       </div>
     </div>
 
-    <div v-if="topics.length > 0" class="topic-list">
+    <div
+      v-if="topics.length > 0"
+      class="topic-list"
+    >
       <div
         v-for="topic in topics"
         :key="topic.id"
         class="topic-card"
       >
         <div class="topic-header">
-          <h3 class="topic-title">{{ topic.title }}</h3>
+          <h3 class="topic-title">
+            {{ topic.title }}
+          </h3>
           <span class="topic-time">{{ formatDate(topic.created_at) }}</span>
         </div>
         
@@ -34,25 +39,46 @@
         </div>
 
         <div class="topic-actions">
-          <button class="btn-approve" @click="showReviewModal(topic, 'approve')">
+          <button
+            class="btn-approve"
+            @click="showReviewModal(topic, 'approve')"
+          >
             ✓ 通过
           </button>
-          <button class="btn-reject" @click="showReviewModal(topic, 'reject')">
+          <button
+            class="btn-reject"
+            @click="showReviewModal(topic, 'reject')"
+          >
             ✕ 驳回
           </button>
         </div>
       </div>
     </div>
 
-    <div v-else class="no-data">
+    <div
+      v-else
+      class="no-data"
+    >
       暂无待审核话题
     </div>
 
-    <div v-if="showModal" class="modal-overlay" @click="closeModal">
-      <div class="modal-content" @click.stop>
+    <div
+      v-if="showModal"
+      class="modal-overlay"
+      @click="closeModal"
+    >
+      <div
+        class="modal-content"
+        @click.stop
+      >
         <div class="modal-header">
           <h3>{{ reviewAction === 'approve' ? '通过审核' : '驳回话题' }}</h3>
-          <button class="close-btn" @click="closeModal">✕</button>
+          <button
+            class="close-btn"
+            @click="closeModal"
+          >
+            ✕
+          </button>
         </div>
         <div class="modal-body">
           <div class="review-info">
@@ -68,12 +94,22 @@
               :placeholder="reviewAction === 'approve' ? '选填，可留空' : '必填，请说明驳回原因'"
               rows="4"
               class="form-textarea"
-            ></textarea>
+            />
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn-cancel" @click="closeModal">取消</button>
-          <button class="btn-confirm" @click="confirmReview">确认</button>
+          <button
+            class="btn-cancel"
+            @click="closeModal"
+          >
+            取消
+          </button>
+          <button
+            class="btn-confirm"
+            @click="confirmReview"
+          >
+            确认
+          </button>
         </div>
       </div>
     </div>
@@ -82,6 +118,8 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import request from '@/api/request'
+import { ElMessage } from 'element-plus'
 
 const topics = ref([])
 const pendingCount = ref(0)
@@ -94,9 +132,14 @@ onMounted(() => {
   loadPendingTopics()
 })
 
-const loadPendingTopics = () => {
-  console.log('加载待审核话题')
-  // TODO: 调用API获取待审核话题
+const loadPendingTopics = async () => {
+  try {
+    const res = await request.get('/admin/topics/pending')
+    topics.value = res.data.topics
+    pendingCount.value = res.data.count
+  } catch (err) {
+    console.error('加载待审核话题失败:', err)
+  }
 }
 
 const showReviewModal = (topic, action) => {
@@ -113,20 +156,20 @@ const closeModal = () => {
   reviewReason.value = ''
 }
 
-const confirmReview = () => {
+const confirmReview = async () => {
   if (reviewAction.value === 'reject' && !reviewReason.value.trim()) {
-    alert('请填写驳回理由')
+    ElMessage.warning('请填写驳回理由')
     return
   }
 
-  console.log('审核话题:', {
-    topicId: selectedTopic.value?.id,
-    action: reviewAction.value,
-    reason: reviewReason.value
-  })
-  // TODO: 调用API提交审核结果
-  closeModal()
-  loadPendingTopics()
+  try {
+    await request.post('/admin/topics/review', { topicId: selectedTopic.value.id, action: reviewAction.value, reason: reviewReason.value })
+    ElMessage.success(reviewAction.value === 'approve' ? '审核通过' : '已驳回')
+    closeModal()
+    loadPendingTopics()
+  } catch (err) {
+    ElMessage.error('审核操作失败')
+  }
 }
 
 const formatDate = (date) => {

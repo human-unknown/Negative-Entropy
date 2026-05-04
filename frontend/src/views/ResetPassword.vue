@@ -1,7 +1,9 @@
 <template>
   <div class="reset-page">
     <div class="reset-container">
-      <h1 class="reset-title">找回密码</h1>
+      <h1 class="reset-title">
+        找回密码
+      </h1>
       
       <div class="reset-form">
         <!-- 账号类型 -->
@@ -25,7 +27,7 @@
             :type="accountType === 'email' ? 'email' : 'tel'"
             :placeholder="accountType === 'phone' ? '请输入手机号' : '请输入邮箱'"
             class="form-input"
-          />
+          >
         </div>
 
         <!-- 验证码 -->
@@ -36,7 +38,7 @@
               type="text"
               placeholder="请输入验证码"
               class="form-input captcha-input"
-            />
+            >
             <button
               class="captcha-btn"
               type="button"
@@ -55,7 +57,7 @@
             type="password"
             placeholder="请输入新密码"
             class="form-input"
-          />
+          >
         </div>
 
         <!-- 确认密码 -->
@@ -66,11 +68,20 @@
             placeholder="请再次输入新密码"
             class="form-input"
             @blur="validatePassword"
-          />
-          <span v-if="passwordError" class="error-text">{{ passwordError }}</span>
+          >
+          <span
+            v-if="passwordError"
+            class="error-text"
+          >{{ passwordError }}</span>
         </div>
 
-        <button @click="submit" :disabled="!canSubmit" class="submit-btn">重置密码</button>
+        <button
+          :disabled="!canSubmit"
+          class="submit-btn"
+          @click="submit"
+        >
+          重置密码
+        </button>
       </div>
     </div>
   </div>

@@ -1,7 +1,7 @@
 <template>
   <div class="user-info">
     <div class="avatar-section">
-      <div class="avatar-placeholder"></div>
+      <div class="avatar-placeholder" />
     </div>
 
     <div class="info-section">
@@ -18,7 +18,10 @@
       <div class="info-row exp-row">
         <span class="label">经验值</span>
         <div class="exp-bar">
-          <div class="exp-progress" :style="{ width: expPercent + '%' }"></div>
+          <div
+            class="exp-progress"
+            :style="{ width: expPercent + '%' }"
+          />
           <span class="exp-text">{{ currentExp }} / {{ maxExp }}</span>
         </div>
       </div>
@@ -30,7 +33,10 @@
 
       <div class="info-row">
         <span class="label">状态</span>
-        <span class="value status" :class="statusClass">{{ statusText }}</span>
+        <span
+          class="value status"
+          :class="statusClass"
+        >{{ statusText }}</span>
       </div>
     </div>
   </div>

@@ -9,14 +9,20 @@
       @input="handleInput"
     />
     
-    <div v-if="auditStatus !== 'safe'" :class="['audit-hint', statusClass]">
+    <div
+      v-if="auditStatus !== 'safe'"
+      :class="['audit-hint', statusClass]"
+    >
       <span class="hint-icon">{{ statusIcon }}</span>
       <span class="hint-text">{{ hintMessage }}</span>
     </div>
 
     <div class="input-footer">
       <span class="char-count">{{ localValue.length }} / {{ maxLength }}</span>
-      <span v-if="checking" class="checking-text">检测中...</span>
+      <span
+        v-if="checking"
+        class="checking-text"
+      >检测中...</span>
     </div>
   </div>
 </template>

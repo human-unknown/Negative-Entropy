@@ -1,6 +1,5 @@
 import express from 'express'
 import cors from 'cors'
-import config from './config/app.js'
 import { errorHandler, timeoutMiddleware } from './middlewares/errorHandler.js'
 import authRoutes from './routes/authRoutes.js'
 import userRoutes from './routes/userRoutes.js'
@@ -11,6 +10,11 @@ import ruleDebateRoutes from './routes/ruleDebateRoutes.js'
 import adminRoutes from './routes/adminRoutes.js'
 import feedbackRoutes from './routes/feedbackRoutes.js'
 import appealRoutes from './routes/appealRoutes.js'
+import reviewRoutes from './routes/reviewRoutes.js'
+import reportRoutes from './routes/reportRoutes.js'
+import auditRoutes from './routes/auditRoutes.js'
+import notificationRoutes from './routes/notificationRoutes.js'
+import systemRoutes from './routes/systemRoutes.js'
 
 const app = express()
 
@@ -35,6 +39,11 @@ app.use('/api/rule-debate', ruleDebateRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/feedback', feedbackRoutes)
 app.use('/api/appeal', appealRoutes)
+app.use('/api/review', reviewRoutes)
+app.use('/api/report', reportRoutes)
+app.use('/api/audit', auditRoutes)
+app.use('/api/notification', notificationRoutes)
+app.use('/api/system', systemRoutes)
 
 // 错误处理
 app.use(errorHandler)

@@ -13,11 +13,19 @@
 
     <div class="stance-select">
       <label>
-        <input type="radio" v-model="stance" :value="1" />
+        <input
+          v-model="stance"
+          type="radio"
+          :value="1"
+        >
         <span>支持正方</span>
       </label>
       <label>
-        <input type="radio" v-model="stance" :value="2" />
+        <input
+          v-model="stance"
+          type="radio"
+          :value="2"
+        >
         <span>支持反方</span>
       </label>
     </div>
@@ -27,15 +35,18 @@
       placeholder="请发表你的观点（10-200字）..."
       maxlength="200"
       :disabled="submitting"
-    ></textarea>
+    />
 
     <div class="actions">
-      <span v-if="pendingCount > 0" class="pending-tip">
+      <span
+        v-if="pendingCount > 0"
+        class="pending-tip"
+      >
         有 {{ pendingCount }} 条发言审核中
       </span>
       <button 
-        @click="handleSubmit"
         :disabled="!canSubmit"
+        @click="handleSubmit"
       >
         {{ submitting ? '提交中...' : '发言' }}
       </button>

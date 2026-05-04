@@ -1,27 +1,46 @@
 <template>
   <div class="vote-panel">
-    <div v-if="!hasVoted" class="vote-section">
+    <div
+      v-if="!hasVoted"
+      class="vote-section"
+    >
       <h3>🗳️ 投票环节</h3>
-      <p class="vote-tip">辩论已结束，请投票选出你认为更有说服力的一方</p>
-      <p class="secret-tip">💡 投票结果不公开，仅用于统计</p>
+      <p class="vote-tip">
+        辩论已结束，请投票选出你认为更有说服力的一方
+      </p>
+      <p class="secret-tip">
+        💡 投票结果不公开，仅用于统计
+      </p>
       
       <div class="vote-options">
         <div 
           :class="['vote-option', 'pro', { selected: selectedStance === 1 }]"
           @click="selectedStance = 1"
         >
-          <div class="icon">⚔️</div>
-          <div class="label">支持正方</div>
-          <div class="desc">{{ topic.title }} - 正方观点</div>
+          <div class="icon">
+            ⚔️
+          </div>
+          <div class="label">
+            支持正方
+          </div>
+          <div class="desc">
+            {{ topic.title }} - 正方观点
+          </div>
         </div>
 
         <div 
           :class="['vote-option', 'con', { selected: selectedStance === 2 }]"
           @click="selectedStance = 2"
         >
-          <div class="icon">🛡️</div>
-          <div class="label">支持反方</div>
-          <div class="desc">{{ topic.title }} - 反方观点</div>
+          <div class="icon">
+            🛡️
+          </div>
+          <div class="label">
+            支持反方
+          </div>
+          <div class="desc">
+            {{ topic.title }} - 反方观点
+          </div>
         </div>
       </div>
 
@@ -34,11 +53,18 @@
       </button>
     </div>
 
-    <div v-else class="voted-section">
-      <div class="voted-icon">✅</div>
+    <div
+      v-else
+      class="voted-section"
+    >
+      <div class="voted-icon">
+        ✅
+      </div>
       <h3>已投票</h3>
       <p>你已完成投票，感谢参与！</p>
-      <p class="result-tip">投票结果将在结算后公布</p>
+      <p class="result-tip">
+        投票结果将在结算后公布
+      </p>
     </div>
   </div>
 </template>

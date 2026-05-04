@@ -4,12 +4,25 @@
     <form @submit.prevent="handleSubmit">
       <div class="form-group">
         <label>反馈类型 <span class="required">*</span></label>
-        <select v-model="form.type" required>
-          <option value="">请选择</option>
-          <option value="bug">Bug反馈</option>
-          <option value="feature">功能建议</option>
-          <option value="content">内容问题</option>
-          <option value="other">其他</option>
+        <select
+          v-model="form.type"
+          required
+        >
+          <option value="">
+            请选择
+          </option>
+          <option value="bug">
+            Bug反馈
+          </option>
+          <option value="feature">
+            功能建议
+          </option>
+          <option value="content">
+            内容问题
+          </option>
+          <option value="other">
+            其他
+          </option>
         </select>
       </div>
 
@@ -22,8 +35,10 @@
           required
           minlength="10"
           maxlength="1000"
-        ></textarea>
-        <div class="char-count">{{ form.content.length }}/1000</div>
+        />
+        <div class="char-count">
+          {{ form.content.length }}/1000
+        </div>
       </div>
 
       <div class="form-group">
@@ -32,10 +47,14 @@
           v-model="form.contact"
           type="text"
           placeholder="选填，便于我们联系您（邮箱或手机号）"
-        />
+        >
       </div>
 
-      <button type="submit" class="submit-btn" :disabled="submitting">
+      <button
+        type="submit"
+        class="submit-btn"
+        :disabled="submitting"
+      >
         {{ submitting ? '提交中...' : '提交反馈' }}
       </button>
     </form>
@@ -44,6 +63,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import { ElMessage } from 'element-plus'
 import request from '../api/request'
 
 const form = ref({
@@ -63,14 +83,14 @@ const handleSubmit = async () => {
     const response = await request.post('/feedback', form.value)
 
     if (response.code === 200) {
-      alert('反馈提交成功，感谢您的支持！')
+      ElMessage.success('反馈提交成功，感谢您的支持！')
       form.value = { type: '', content: '', contact: '' }
     } else {
-      alert(response.message || '提交失败')
+      ElMessage.error(response.message || '提交失败')
     }
   } catch (error) {
     console.error('提交反馈失败:', error)
-    alert('提交失败，请稍后重试')
+    ElMessage.error('提交失败，请稍后重试')
   } finally {
     submitting.value = false
   }

@@ -1,5 +1,9 @@
 <template>
-  <div v-if="visible" class="audit-fail-modal" @click.self="handleClose">
+  <div
+    v-if="visible"
+    class="audit-fail-modal"
+    @click.self="handleClose"
+  >
     <div class="modal-content">
       <div class="modal-header">
         <span class="icon">🚫</span>
@@ -7,10 +11,17 @@
       </div>
 
       <div class="modal-body">
-        <p class="main-message">{{ message || '您的内容包含不当信息，无法发布' }}</p>
+        <p class="main-message">
+          {{ message || '您的内容包含不当信息，无法发布' }}
+        </p>
         
-        <div v-if="violations && violations.length > 0" class="violations-list">
-          <div class="violations-title">违规原因：</div>
+        <div
+          v-if="violations && violations.length > 0"
+          class="violations-list"
+        >
+          <div class="violations-title">
+            违规原因：
+          </div>
           <div class="violations-tags">
             <span
               v-for="violation in violations"
@@ -33,16 +44,21 @@
       </div>
 
       <div class="modal-footer">
-        <button class="btn-primary" @click="handleClose">我知道了</button>
+        <button
+          class="btn-primary"
+          @click="handleClose"
+        >
+          我知道了
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { defineProps, defineEmits } from 'vue'
 
-const props = defineProps({
+defineProps({
   visible: {
     type: Boolean,
     default: false

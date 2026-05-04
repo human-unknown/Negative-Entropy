@@ -1,5 +1,5 @@
 import express from 'express'
-import { getCategories, getTopics, createTopic, auditTopic, joinTopic, createSpeech, createAudienceSpeech, auditSpeech, closeTopic, voteTopic, settleTopic, searchTopics, getSpeeches, getTopicDetail } from '../controllers/debateController.js'
+import { getCategories, getTopics, createTopic, auditTopic, joinTopic, createSpeech, createAudienceSpeech, auditSpeech, closeTopic, voteTopic, settleTopic, searchTopics, getSpeeches, getTopicDetail, getTopicResult } from '../controllers/debateController.js'
 import { auth } from '../middlewares/auth.js'
 import { aiAuditBatch } from '../middlewares/aiAudit.js'
 import { requireAdmin, requireLevel } from '../middlewares/permission.js'
@@ -25,5 +25,6 @@ router.put('/speeches/:speechId/audit', auth, requireAdmin, auditSpeech)
 router.put('/topics/:topicId/close', auth, closeTopic)
 router.post('/topics/:topicId/vote', auth, voteTopic)
 router.post('/topics/:topicId/settle', auth, settleTopic)
+router.get('/topics/:topicId/result', getTopicResult)
 
 export default router

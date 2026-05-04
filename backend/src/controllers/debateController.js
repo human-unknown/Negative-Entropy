@@ -3,6 +3,14 @@ import { success, error } from '../utils/response.js'
 import { USER_LEVEL } from '../constants/userLevel.js'
 import { DEBATE_STATUS } from '../constants/debateStatus.js'
 
+// 投票权重映射表
+const VOTE_WEIGHT_MAP = {
+  [USER_LEVEL.BEGINNER]: 1.0,
+  [USER_LEVEL.INTERMEDIATE]: 1.0,
+  [USER_LEVEL.ADVANCED]: 1.5,
+  [USER_LEVEL.ADMIN]: 2.0
+}
+
 export const getCategories = async (req, res) => {
   try {
     const [rows] = await pool.query(
@@ -88,12 +96,10 @@ export const createTopic = async (req, res) => {
     const userId = req.user.userId
 
     if (!title || !description || !category) {
-      await conn.release()
       return res.json(error('标题、描述和分类不能为空', 400))
     }
 
     if (title.length > 100 || description.length > 1000) {
-      await conn.release()
       return res.json(error('标题或描述过长', 400))
     }
 
@@ -105,7 +111,7 @@ export const createTopic = async (req, res) => {
 
     // 根据AI审核结果决定初始状态
     // 0: 待审核, 1: 审核通过, 2: 审核拒绝
-    let initialAuditStatus = needsManualReview ? 0 : 1
+    const initialAuditStatus = needsManualReview ? 0 : 1
 
     // 插入话题
     const [result] = await conn.query(
@@ -117,40 +123,7 @@ export const createTopic = async (req, res) => {
 
     // 如果需要人工复核，添加到复核队列
     if (needsManualReview) {
-      const violations = []
-      let auditReason = ''
-      let confidence = 0
-
-      // 收集审核信息
-      if (auditResults.title) {
-        confidence = Math.max(confidence, auditResults.title.confidence || 0)
-        if (auditResults.title.reason) {
-          auditReason += `标题: ${auditResults.title.reason}; `
-        }
-      }
-      if (auditResults.description) {
-        confidence = Math.max(confidence, auditResults.description.confidence || 0)
-        if (auditResults.description.reason) {
-          auditReason += `描述: ${auditResults.description.reason}`
-        }
-      }
-
-      await conn.query(
-        `INSERT INTO content_review_queue
-         (content, content_type, user_id, related_id, audit_result, audit_reason, violations, confidence, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          JSON.stringify({ title, description }),
-          'topic',
-          userId,
-          topicId,
-          'manual_review',
-          auditReason,
-          JSON.stringify(violations),
-          confidence,
-          'pending'
-        ]
-      )
+      await addToReviewQueue(conn, { title, description }, userId, topicId, auditResults)
     }
 
     await conn.commit()
@@ -211,7 +184,6 @@ export const joinTopic = async (req, res) => {
     const userId = req.user.userId
 
     if (!stance || ![1, 2].includes(parseInt(stance))) {
-      await conn.release()
       return res.json(error('立场无效', 400))
     }
 
@@ -223,13 +195,11 @@ export const joinTopic = async (req, res) => {
     )
     if (!topic.length) {
       await conn.rollback()
-      conn.release()
       return res.json(error('话题不存在或未通过审核', 404))
     }
 
     if (topic[0].status === DEBATE_STATUS.CLOSED || topic[0].status === DEBATE_STATUS.SETTLED) {
       await conn.rollback()
-      conn.release()
       return res.json(error('辩论已结束，无法加入', 400))
     }
 
@@ -239,7 +209,6 @@ export const joinTopic = async (req, res) => {
     )
     if (existing.length) {
       await conn.rollback()
-      conn.release()
       return res.json(error('已加入该话题', 400))
     }
 
@@ -250,7 +219,6 @@ export const joinTopic = async (req, res) => {
     const limit = stance === 1 ? topic[0].pro_limit : topic[0].con_limit
     if (count[0].cnt >= limit) {
       await conn.rollback()
-      conn.release()
       return res.json(error(stance === 1 ? '正方人数已满' : '反方人数已满', 400))
     }
 
@@ -278,13 +246,11 @@ export const createSpeech = async (req, res) => {
     const userId = req.user.userId
 
     if (!content || typeof content !== 'string') {
-      await conn.release()
       return res.json(error('发言内容不能为空', 400))
     }
 
     const wordCount = content.trim().length
     if (wordCount < 10 || wordCount > 500) {
-      await conn.release()
       return res.json(error('发言字数需在10-500字之间', 400))
     }
 
@@ -296,12 +262,10 @@ export const createSpeech = async (req, res) => {
     )
     if (!topic.length) {
       await conn.rollback()
-      conn.release()
       return res.json(error('话题不存在或未通过审核', 404))
     }
     if (topic[0].status !== DEBATE_STATUS.ACTIVE && topic[0].status !== DEBATE_STATUS.PENDING) {
       await conn.rollback()
-      conn.release()
       return res.json(error('辩论未开始或已结束', 400))
     }
 
@@ -311,7 +275,6 @@ export const createSpeech = async (req, res) => {
     )
     if (!participant.length) {
       await conn.rollback()
-      conn.release()
       return res.json(error('未加入该话题', 403))
     }
 
@@ -324,7 +287,6 @@ export const createSpeech = async (req, res) => {
       const elapsed = (Date.now() - new Date(lastSpeech[0].created_at).getTime()) / 1000
       if (elapsed < cooldown) {
         await conn.rollback()
-        conn.release()
         return res.json(error(`发言冷却中，请${Math.ceil(cooldown - elapsed)}秒后再试`, 400))
       }
     }
@@ -353,18 +315,15 @@ export const createAudienceSpeech = async (req, res) => {
     const userId = req.user.userId
 
     if (!content || typeof content !== 'string') {
-      await conn.release()
       return res.json(error('发言内容不能为空', 400))
     }
 
     const wordCount = content.trim().length
     if (wordCount < 10 || wordCount > 200) {
-      await conn.release()
       return res.json(error('观众发言字数需在10-200字之间', 400))
     }
 
     if (!stance || ![1, 2].includes(parseInt(stance))) {
-      await conn.release()
       return res.json(error('立场无效', 400))
     }
 
@@ -376,12 +335,10 @@ export const createAudienceSpeech = async (req, res) => {
     )
     if (!topic.length) {
       await conn.rollback()
-      conn.release()
       return res.json(error('话题不存在或未通过审核', 404))
     }
     if (topic[0].status !== DEBATE_STATUS.ACTIVE && topic[0].status !== DEBATE_STATUS.PENDING) {
       await conn.rollback()
-      conn.release()
       return res.json(error('辩论未开始或已结束', 400))
     }
 
@@ -391,7 +348,6 @@ export const createAudienceSpeech = async (req, res) => {
     )
     if (participant.length) {
       await conn.rollback()
-      conn.release()
       return res.json(error('辩手不能以观众身份发言', 403))
     }
 
@@ -446,17 +402,14 @@ export const closeTopic = async (req, res) => {
     )
     if (!topic.length) {
       await conn.rollback()
-      conn.release()
       return res.json(error('话题不存在', 404))
     }
     if (topic[0].publisher_id !== userId) {
       await conn.rollback()
-      conn.release()
       return res.json(error('仅发布者可结束辩论', 403))
     }
     if (topic[0].status !== DEBATE_STATUS.ACTIVE) {
       await conn.rollback()
-      conn.release()
       return res.json(error('辩论未进行中', 400))
     }
 
@@ -481,7 +434,6 @@ export const voteTopic = async (req, res) => {
     const userId = req.user.userId
 
     if (!stance || ![1, 2].includes(parseInt(stance))) {
-      await conn.release()
       return res.json(error('立场无效', 400))
     }
 
@@ -493,12 +445,10 @@ export const voteTopic = async (req, res) => {
     )
     if (!topic.length) {
       await conn.rollback()
-      conn.release()
       return res.json(error('话题不存在', 404))
     }
     if (topic[0].status !== DEBATE_STATUS.CLOSED) {
       await conn.rollback()
-      conn.release()
       return res.json(error('辩论未结束，无法投票', 400))
     }
 
@@ -508,12 +458,11 @@ export const voteTopic = async (req, res) => {
     )
     if (voted.length) {
       await conn.rollback()
-      conn.release()
       return res.json(error('已投过票', 400))
     }
 
-    const [user] = await conn.query('SELECT level FROM user WHERE id = ?', [userId])
-    const weight = user.length ? (user[0].level === USER_LEVEL.ADMIN ? 2.0 : (user[0].level >= USER_LEVEL.ADVANCED ? 1.5 : 1.0)) : 1.0
+    const [users] = await conn.query('SELECT level FROM user WHERE id = ?', [userId])
+    const weight = users.length ? (VOTE_WEIGHT_MAP[users[0].level] || 1.0) : 1.0
 
     await conn.query('INSERT INTO debate_vote (topic_id, user_id, stance, weight) VALUES (?, ?, ?, ?)', [topicId, userId, stance, weight])
     await conn.query('INSERT INTO debate_user_vote (topic_id, user_id) VALUES (?, ?)', [topicId, userId])
@@ -543,24 +492,20 @@ export const settleTopic = async (req, res) => {
     )
     if (!topic.length) {
       await conn.rollback()
-      conn.release()
       return res.json(error('话题不存在', 404))
     }
     if (topic[0].publisher_id !== userId) {
       await conn.rollback()
-      conn.release()
       return res.json(error('仅发布者可结算', 403))
     }
     if (topic[0].status !== DEBATE_STATUS.CLOSED) {
       await conn.rollback()
-      conn.release()
       return res.json(error('辩论未结束', 400))
     }
 
     const [existing] = await conn.query('SELECT id FROM debate_result WHERE topic_id = ? FOR UPDATE', [topicId])
     if (existing.length) {
       await conn.rollback()
-      conn.release()
       return res.json(error('已结算', 400))
     }
 
@@ -657,8 +602,8 @@ export const getSpeeches = async (req, res) => {
     const { topicId } = req.params
     const { role } = req.query
 
-    let conditions = ['ds.topic_id = ?', 'ds.audit_status = 1']
-    let params = [topicId]
+    const conditions = ['ds.topic_id = ?', 'ds.audit_status = 1']
+    const params = [topicId]
 
     if (role) {
       conditions.push('ds.role = ?')
@@ -720,4 +665,64 @@ export const getTopicDetail = async (req, res) => {
     console.error('获取话题详情失败:', err)
     res.json(error('获取话题详情失败', 500))
   }
+}
+
+export const getTopicResult = async (req, res) => {
+  try {
+    const { topicId } = req.params
+
+    const [result] = await pool.query(
+      `SELECT * FROM debate_result WHERE topic_id = ?`,
+      [topicId]
+    )
+
+    if (!result.length) {
+      return res.json(error('辩论结果不存在', 404))
+    }
+
+    res.json(success(result[0]))
+  } catch (err) {
+    console.error('获取辩论结果失败:', err)
+    res.json(error('获取辩论结果失败', 500))
+  }
+}
+
+/**
+ * 将话题添加到人工复核队列
+ * @private
+ */
+async function addToReviewQueue(conn, content, userId, topicId, auditResults) {
+  const violations = []
+  let auditReason = ''
+  let confidence = 0
+
+  if (auditResults.title) {
+    confidence = Math.max(confidence, auditResults.title.confidence || 0)
+    if (auditResults.title.reason) {
+      auditReason += `标题: ${auditResults.title.reason}; `
+    }
+  }
+  if (auditResults.description) {
+    confidence = Math.max(confidence, auditResults.description.confidence || 0)
+    if (auditResults.description.reason) {
+      auditReason += `描述: ${auditResults.description.reason}`
+    }
+  }
+
+  await conn.query(
+    `INSERT INTO content_review_queue
+     (content, content_type, user_id, related_id, audit_result, audit_reason, violations, confidence, status)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      JSON.stringify(content),
+      'topic',
+      userId,
+      topicId,
+      'manual_review',
+      auditReason,
+      JSON.stringify(violations),
+      confidence,
+      'pending'
+    ]
+  )
 }

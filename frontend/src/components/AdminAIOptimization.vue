@@ -7,7 +7,10 @@
       </div>
     </div>
 
-    <div v-if="errors.length > 0" class="error-list">
+    <div
+      v-if="errors.length > 0"
+      class="error-list"
+    >
       <div
         v-for="error in errors"
         :key="error.id"
@@ -19,7 +22,9 @@
         </div>
         
         <div class="error-content">
-          <div class="content-text">{{ error.content }}</div>
+          <div class="content-text">
+            {{ error.content }}
+          </div>
           <div class="ai-result">
             <span class="label">AI判断：</span>
             <span :class="['result', error.ai_result]">{{ getResultText(error.ai_result) }}</span>
@@ -27,7 +32,9 @@
         </div>
 
         <div class="label-section">
-          <div class="label-title">正确结果：</div>
+          <div class="label-title">
+            正确结果：
+          </div>
           <div class="label-options">
             <button
               :class="['label-btn', { active: error.correctResult === 'pass' }]"
@@ -46,12 +53,21 @@
       </div>
     </div>
 
-    <div v-else class="no-data">
+    <div
+      v-else
+      class="no-data"
+    >
       暂无审核错误记录
     </div>
 
-    <div v-if="errors.length > 0" class="submit-bar">
-      <button class="btn-submit" @click="submitOptimization">
+    <div
+      v-if="errors.length > 0"
+      class="submit-bar"
+    >
+      <button
+        class="btn-submit"
+        @click="submitOptimization"
+      >
         提交优化数据
       </button>
     </div>
@@ -60,6 +76,8 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import request from '@/api/request'
 
 const errors = ref([])
 const errorCount = ref(0)
@@ -69,8 +87,13 @@ onMounted(() => {
 })
 
 const loadErrors = async () => {
-  console.log('加载审核错误记录')
-  // TODO: 调用API获取错误记录
+  try {
+    const res = await request.get('/admin/ai/errors')
+    errors.value = res.data.errors
+    errorCount.value = res.data.count
+  } catch (err) {
+    console.error('加载审核错误记录失败:', err)
+  }
 }
 
 const setCorrectResult = (error, result) => {
@@ -80,11 +103,16 @@ const setCorrectResult = (error, result) => {
 const submitOptimization = async () => {
   const labeled = errors.value.filter(e => e.correctResult)
   if (labeled.length === 0) {
-    alert('请至少标记一条记录')
+    ElMessage.warning('请至少标记一条记录')
     return
   }
-  console.log('提交优化数据:', labeled)
-  // TODO: 调用API提交优化数据
+  try {
+    await request.post('/admin/ai/optimize', { labels: labeled.map(e => ({ id: e.id, correctResult: e.correctResult })) })
+    ElMessage.success('优化数据提交成功')
+    loadErrors()
+  } catch (err) {
+    console.error('提交优化数据失败:', err)
+  }
 }
 
 const getResultText = (result) => {

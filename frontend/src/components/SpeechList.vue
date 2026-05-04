@@ -1,6 +1,10 @@
 <template>
   <div class="speech-list">
-    <div v-for="speech in displaySpeeches" :key="speech.id" :class="['speech-item', getStanceClass(speech.stance, speech.role)]">
+    <div
+      v-for="speech in displaySpeeches"
+      :key="speech.id"
+      :class="['speech-item', getStanceClass(speech.stance, speech.role)]"
+    >
       <div class="speech-bubble">
         <div class="speech-header">
           <span class="username">{{ speech.user_name || '匿名用户' }}</span>
@@ -8,7 +12,9 @@
             {{ getRoleText(speech.role, speech.stance) }}
           </span>
         </div>
-        <div class="speech-content">{{ speech.content }}</div>
+        <div class="speech-content">
+          {{ speech.content }}
+        </div>
         <div class="speech-footer">
           <span class="time">{{ formatTime(speech.created_at) }}</span>
         </div>

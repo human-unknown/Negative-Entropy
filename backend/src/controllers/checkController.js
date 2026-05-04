@@ -23,7 +23,13 @@ const debateTopics = [
 ]
 
 export const generateTest = (req, res) => {
-  const selected = questions.sort(() => Math.random() - 0.5).slice(0, 5)
+  // Fisher-Yates 洗牌，避免 Array.sort 有偏随机
+  const shuffled = [...questions]
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+  }
+  const selected = shuffled.slice(0, 5)
   const testData = selected.map((item, index) => ({
     id: index,
     question: item.q,
@@ -78,7 +84,7 @@ export const getDebateTopic = (req, res) => {
 }
 
 export const submitDebate = async (req, res) => {
-  const { userId, topic, speech } = req.body
+  const { userId, speech } = req.body
 
   if (!userId || !speech || speech.length < 50) {
     return res.json(error('发言内容至少50字', 400))

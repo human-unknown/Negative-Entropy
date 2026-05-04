@@ -7,7 +7,10 @@
       </div>
     </div>
 
-    <div v-if="items.length > 0" class="review-list">
+    <div
+      v-if="items.length > 0"
+      class="review-list"
+    >
       <div
         v-for="item in items"
         :key="item.id"
@@ -35,31 +38,56 @@
           </div>
           
           <div class="content-text">
-            <div class="text-label">原文内容：</div>
-            <div class="text-box">{{ item.content }}</div>
+            <div class="text-label">
+              原文内容：
+            </div>
+            <div class="text-box">
+              {{ item.content }}
+            </div>
           </div>
         </div>
 
         <div class="card-actions">
-          <button class="btn-approve" @click="showReviewModal(item, 'approve')">
+          <button
+            class="btn-approve"
+            @click="showReviewModal(item, 'approve')"
+          >
             ✓ 通过
           </button>
-          <button class="btn-reject" @click="showReviewModal(item, 'reject')">
+          <button
+            class="btn-reject"
+            @click="showReviewModal(item, 'reject')"
+          >
             ✕ 驳回
           </button>
         </div>
       </div>
     </div>
 
-    <div v-else class="no-data">
+    <div
+      v-else
+      class="no-data"
+    >
       暂无待复核内容
     </div>
 
-    <div v-if="showModal" class="modal-overlay" @click="closeModal">
-      <div class="modal-content" @click.stop>
+    <div
+      v-if="showModal"
+      class="modal-overlay"
+      @click="closeModal"
+    >
+      <div
+        class="modal-content"
+        @click.stop
+      >
         <div class="modal-header">
           <h3>{{ reviewAction === 'approve' ? '通过复核' : '驳回内容' }}</h3>
-          <button class="close-btn" @click="closeModal">✕</button>
+          <button
+            class="close-btn"
+            @click="closeModal"
+          >
+            ✕
+          </button>
         </div>
         <div class="modal-body">
           <div class="review-info">
@@ -67,7 +95,9 @@
               <span class="label">内容类型：</span>
               <span class="value">{{ getContentType(selectedItem?.type) }}</span>
             </div>
-            <div class="content-preview">{{ selectedItem?.content }}</div>
+            <div class="content-preview">
+              {{ selectedItem?.content }}
+            </div>
           </div>
           <div class="form-group">
             <label>{{ reviewAction === 'approve' ? '复核意见：' : '驳回理由：' }}</label>
@@ -76,12 +106,22 @@
               :placeholder="reviewAction === 'approve' ? '选填' : '必填'"
               rows="4"
               class="form-textarea"
-            ></textarea>
+            />
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn-cancel" @click="closeModal">取消</button>
-          <button class="btn-confirm" @click="confirmReview">确认</button>
+          <button
+            class="btn-cancel"
+            @click="closeModal"
+          >
+            取消
+          </button>
+          <button
+            class="btn-confirm"
+            @click="confirmReview"
+          >
+            确认
+          </button>
         </div>
       </div>
     </div>
@@ -90,6 +130,8 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import request from '@/api/request'
 
 const items = ref([])
 const pendingCount = ref(0)
@@ -102,9 +144,14 @@ onMounted(() => {
   loadPendingReviews()
 })
 
-const loadPendingReviews = () => {
-  console.log('加载待复核内容')
-  // TODO: 调用API获取待复核内容
+const loadPendingReviews = async () => {
+  try {
+    const res = await request.get('/review/queue', { params: { status: 'pending', limit: 20 } })
+    items.value = res.data.list
+    pendingCount.value = res.data.total
+  } catch (err) {
+    console.error('加载待复核内容失败:', err)
+  }
 }
 
 const showReviewModal = (item, action) => {
@@ -121,20 +168,23 @@ const closeModal = () => {
   reviewReason.value = ''
 }
 
-const confirmReview = () => {
+const confirmReview = async () => {
   if (reviewAction.value === 'reject' && !reviewReason.value.trim()) {
-    alert('请填写驳回理由')
+    ElMessage.warning('请填写驳回理由')
     return
   }
 
-  console.log('复核内容:', {
-    itemId: selectedItem.value?.id,
-    action: reviewAction.value,
-    reason: reviewReason.value
-  })
-  // TODO: 调用API提交复核结果
-  closeModal()
-  loadPendingReviews()
+  try {
+    if (reviewAction.value === 'approve') {
+      await request.post(`/review/${selectedItem.value.id}/approve`, {})
+    } else if (reviewAction.value === 'reject') {
+      await request.post(`/review/${selectedItem.value.id}/reject`, { reason: reviewReason.value })
+    }
+    closeModal()
+    loadPendingReviews()
+  } catch (err) {
+    console.error('复核操作失败:', err)
+  }
 }
 
 const getContentType = (type) => {

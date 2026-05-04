@@ -55,12 +55,12 @@ const handleMockRequest = async (config) => {
   
   if (url.includes('/auth/register')) return mockApi.register(data)
   if (url.includes('/auth/login')) return mockApi.login(data)
-  if (url.includes('/debates') && method === 'get' && !url.includes('/topics/')) return mockApi.getDebateList(params)
-  if (url.match(/\/debates\/topics\/\d+$/) && method === 'get') {
+  if (url.includes('/debate') && method === 'get' && !url.includes('/topics/')) return mockApi.getDebateList(params)
+  if (url.match(/\/debate\/topics\/\d+$/) && method === 'get') {
     const topicId = url.match(/\/topics\/(\d+)/)[1]
     return mockApi.getDebateDetail(topicId)
   }
-  if (url.includes('/debates/topics') && method === 'post' && !url.includes('/join') && !url.includes('/speeches') && !url.includes('/vote')) return mockApi.createDebate(data)
+  if (url.includes('/debate/topics') && method === 'post' && !url.includes('/join') && !url.includes('/speeches') && !url.includes('/vote')) return mockApi.createDebate(data)
   if (url.includes('/join')) {
     const topicId = url.match(/\/topics\/(\d+)/)[1]
     return mockApi.joinDebate(topicId, data.stance)
@@ -85,6 +85,12 @@ const handleMockRequest = async (config) => {
   if (url.includes('/check/result/')) {
     const userId = url.match(/\/result\/(\d+)/)?.[1]
     return mockApi.getCheckResult(userId)
+  }
+  if (url.includes('/rules') || url.includes('/rule-debates')) {
+    if (url.includes('/rules') && method === 'get') return mockApi.getRules()
+    if (url.includes('/rules') && (method === 'post' || method === 'put')) return mockApi.saveRule(data)
+    if (url.includes('/rule-debates') && method === 'post') return mockApi.createRuleDebate(data)
+    return { code: 200, data: {}, message: '规则操作成功' }
   }
   
   return { code: 200, data: {}, message: 'Mock响应' }

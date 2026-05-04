@@ -4,12 +4,18 @@
       <div class="stance-column support">
         <h3>正方 - 支持修改 ({{ supportSpeeches.length }})</h3>
         <div class="speech-list">
-          <div v-for="speech in supportSpeeches" :key="speech.id" class="speech-item">
+          <div
+            v-for="speech in supportSpeeches"
+            :key="speech.id"
+            class="speech-item"
+          >
             <div class="speech-header">
               <span class="username">{{ speech.user_name }}</span>
               <span class="time">{{ formatTime(speech.created_at) }}</span>
             </div>
-            <div class="speech-content">{{ speech.content }}</div>
+            <div class="speech-content">
+              {{ speech.content }}
+            </div>
           </div>
         </div>
       </div>
@@ -17,12 +23,18 @@
       <div class="stance-column oppose">
         <h3>反方 - 反对修改 ({{ opposeSpeeches.length }})</h3>
         <div class="speech-list">
-          <div v-for="speech in opposeSpeeches" :key="speech.id" class="speech-item">
+          <div
+            v-for="speech in opposeSpeeches"
+            :key="speech.id"
+            class="speech-item"
+          >
             <div class="speech-header">
               <span class="username">{{ speech.user_name }}</span>
               <span class="time">{{ formatTime(speech.created_at) }}</span>
             </div>
-            <div class="speech-content">{{ speech.content }}</div>
+            <div class="speech-content">
+              {{ speech.content }}
+            </div>
           </div>
         </div>
       </div>

@@ -1,7 +1,9 @@
 <template>
   <div class="register-page">
     <div class="register-container">
-      <h1 class="register-title">注册账号</h1>
+      <h1 class="register-title">
+        注册账号
+      </h1>
       <div class="register-form">
         <!-- 账号类型选择 -->
         <div class="form-group">
@@ -25,8 +27,11 @@
             :placeholder="accountType === 'phone' ? '请输入手机号' : '请输入邮箱'"
             class="form-input"
             @blur="validateAccount"
-          />
-          <span v-if="accountError" class="error-text">{{ accountError }}</span>
+          >
+          <span
+            v-if="accountError"
+            class="error-text"
+          >{{ accountError }}</span>
         </div>
 
         <!-- 用户名 -->
@@ -37,9 +42,12 @@
             placeholder="请输入真实姓名"
             class="form-input"
             @input="validateUsername"
-          />
+          >
           <span class="hint-text">必须包含真实姓氏，禁止使用娱乐化昵称</span>
-          <span v-if="usernameError" class="error-text">{{ usernameError }}</span>
+          <span
+            v-if="usernameError"
+            class="error-text"
+          >{{ usernameError }}</span>
         </div>
 
         <!-- 密码 -->
@@ -49,7 +57,7 @@
             type="password"
             placeholder="请输入密码"
             class="form-input"
-          />
+          >
         </div>
 
         <!-- 确认密码 -->
@@ -60,8 +68,11 @@
             placeholder="请再次输入密码"
             class="form-input"
             @blur="validatePassword"
-          />
-          <span v-if="passwordError" class="error-text">{{ passwordError }}</span>
+          >
+          <span
+            v-if="passwordError"
+            class="error-text"
+          >{{ passwordError }}</span>
         </div>
 
         <!-- 验证码 -->
@@ -72,8 +83,11 @@
               type="text"
               :placeholder="accountType === 'phone' ? '请输入短信验证码' : '请输入图形验证码'"
               class="form-input captcha-input"
-            />
-            <button class="captcha-btn" type="button">
+            >
+            <button
+              class="captcha-btn"
+              type="button"
+            >
               {{ accountType === 'phone' ? '获取验证码' : '刷新' }}
             </button>
           </div>
@@ -82,8 +96,18 @@
         <!-- 用户协议 -->
         <div class="form-group">
           <label class="agreement-label">
-            <input v-model="agreed" type="checkbox" class="agreement-checkbox" />
-            <span>我已阅读并同意<a href="#" class="agreement-link">用户协议</a>和<a href="#" class="agreement-link">隐私政策</a></span>
+            <input
+              v-model="agreed"
+              type="checkbox"
+              class="agreement-checkbox"
+            >
+            <span>我已阅读并同意<a
+              href="#"
+              class="agreement-link"
+            >用户协议</a>和<a
+              href="#"
+              class="agreement-link"
+            >隐私政策</a></span>
           </label>
         </div>
 
@@ -103,6 +127,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import request from '@/api/request'
 
 const router = useRouter()
@@ -150,15 +175,14 @@ const handleSubmit = async () => {
     const res = await request.post('/auth/register', registerData)
     
     if (res.code === 200) {
-      alert('注册成功！请进行用户名校验和考核')
-      // 跳转到逻辑测试页面
+      ElMessage.success('注册成功！请进行用户名校验和考核')
       router.push(`/check/logic?userId=${res.data.userId}`)
     } else {
-      alert(res.message || '注册失败')
+      ElMessage.error(res.message || '注册失败')
     }
   } catch (error) {
     console.error('注册失败:', error)
-    alert(error.response?.data?.message || '注册失败，请重试')
+    ElMessage.error(error.response?.data?.message || '注册失败，请重试')
   } finally {
     loading.value = false
   }

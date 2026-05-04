@@ -1,6 +1,7 @@
 import pool from '../config/database.js'
 import { success, error } from '../utils/response.js'
 import { logAudit } from '../utils/auditLog.js'
+import { USER_LEVEL } from '../constants/userLevel.js'
 
 const PUNISH_TYPE = {
   WARNING: 1,
@@ -25,7 +26,7 @@ export const punishUser = async (req, res) => {
     await conn.beginTransaction()
 
     const [users] = await conn.query(
-      'SELECT id, username, level FROM user WHERE id = ?',
+      'SELECT id, name, level FROM user WHERE id = ?',
       [userId]
     )
 
@@ -36,7 +37,7 @@ export const punishUser = async (req, res) => {
 
     const user = users[0]
 
-    if (user.level === 4) {
+    if (user.level === USER_LEVEL.ADMIN) {
       await conn.rollback()
       return res.json(error('不能处罚管理员', 403))
     }
@@ -119,7 +120,7 @@ export const restoreUser = async (req, res) => {
     await conn.beginTransaction()
 
     const [users] = await conn.query(
-      'SELECT id, username, status FROM user WHERE id = ?',
+      'SELECT id, name, status FROM user WHERE id = ?',
       [userId]
     )
 
@@ -175,9 +176,9 @@ export const searchUsers = async (req, res) => {
   try {
     const searchTerm = `%${query.trim()}%`
     const [users] = await pool.query(
-      `SELECT id, username, level, exp, status, created_at 
+      `SELECT id, name, level, exp, status, created_at 
        FROM user 
-       WHERE username LIKE ? OR id = ?
+       WHERE name LIKE ? OR id = ?
        LIMIT 20`,
       [searchTerm, isNaN(query) ? 0 : parseInt(query)]
     )
@@ -198,7 +199,7 @@ export const getUserDetail = async (req, res) => {
 
   try {
     const [users] = await pool.query(
-      `SELECT id, username, level, exp, status, created_at 
+      `SELECT id, name, level, exp, status, created_at 
        FROM user 
        WHERE id = ?`,
       [userId]
@@ -259,7 +260,7 @@ export const getPendingTopics = async (req, res) => {
   try {
     const [topics] = await pool.query(
       `SELECT dt.id, dt.title, dt.description, dt.publisher_id as creator_id,
-              u.username as creator_name, dt.created_at
+              u.name as creator_name, dt.created_at
        FROM debate_topic dt
        JOIN user u ON dt.publisher_id = u.id
        WHERE dt.audit_status = 0
@@ -384,5 +385,32 @@ export const submitAIOptimization = async (req, res) => {
     res.json(error('提交失败', 500))
   } finally {
     conn.release()
+  }
+}
+
+export const getStats = async (req, res) => {
+  try {
+    const [userCount] = await pool.query('SELECT COUNT(*) as count FROM user WHERE is_deleted = 0')
+    const [activeUsers] = await pool.query('SELECT COUNT(*) as count FROM user WHERE is_deleted = 0 AND status = 1')
+    const [topicCount] = await pool.query('SELECT COUNT(*) as count FROM debate_topic')
+    const [speechCount] = await pool.query('SELECT COUNT(*) as count FROM debate_speech')
+    const [violationCount] = await pool.query('SELECT COUNT(*) as count FROM user_violation')
+    const [pendingTopics] = await pool.query('SELECT COUNT(*) as count FROM debate_topic WHERE audit_status = 0')
+    const [pendingReviews] = await pool.query('SELECT COUNT(*) as count FROM content_review_queue WHERE status = "pending"')
+    const [pendingReports] = await pool.query('SELECT COUNT(*) as count FROM report WHERE status = 0')
+
+    res.json(success({
+      activeUsers: activeUsers[0].count,
+      totalUsers: userCount[0].count,
+      topics: topicCount[0].count,
+      speeches: speechCount[0].count,
+      violations: violationCount[0].count,
+      pendingTopics: pendingTopics[0].count,
+      pendingReviews: pendingReviews[0].count,
+      pendingReports: pendingReports[0].count
+    }))
+  } catch (err) {
+    console.error('获取统计数据失败:', err)
+    res.json(error('获取统计数据失败', 500))
   }
 }

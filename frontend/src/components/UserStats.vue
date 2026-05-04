@@ -1,21 +1,34 @@
 <template>
   <div class="user-stats">
-    <h3 class="section-title">数据统计</h3>
+    <h3 class="section-title">
+      数据统计
+    </h3>
 
-    <div v-if="loading" class="loading">加载中...</div>
+    <div
+      v-if="loading"
+      class="loading"
+    >
+      加载中...
+    </div>
 
     <template v-else>
       <!-- 等级进度 -->
       <div class="level-card">
         <div class="level-info">
-          <span class="level-badge" :class="`lv-${levelInfo.level}`">
+          <span
+            class="level-badge"
+            :class="`lv-${levelInfo.level}`"
+          >
             Lv.{{ levelInfo.level }}
           </span>
           <span class="level-name">{{ levelText }}</span>
         </div>
         <div class="exp-bar-wrapper">
           <div class="exp-bar">
-            <div class="exp-progress" :style="{ width: levelInfo.progress + '%' }"/>
+            <div
+              class="exp-progress"
+              :style="{ width: levelInfo.progress + '%' }"
+            />
           </div>
           <div class="exp-text">
             经验值 {{ levelInfo.exp }} 点
@@ -27,12 +40,26 @@
 
       <!-- 经验记录 -->
       <div class="exp-history-section">
-        <h4 class="sub-title">经验记录</h4>
+        <h4 class="sub-title">
+          经验记录
+        </h4>
 
-        <div v-if="expHistory.length === 0" class="empty">暂无记录</div>
+        <div
+          v-if="expHistory.length === 0"
+          class="empty"
+        >
+          暂无记录
+        </div>
 
-        <div v-else class="exp-list">
-          <div v-for="item in expHistory" :key="item.id" class="exp-item">
+        <div
+          v-else
+          class="exp-list"
+        >
+          <div
+            v-for="item in expHistory"
+            :key="item.id"
+            class="exp-item"
+          >
             <span :class="['exp-amount', item.exp >= 0 ? 'positive' : 'negative']">
               {{ item.exp >= 0 ? '+' : '' }}{{ item.exp }}
             </span>
@@ -41,10 +68,23 @@
           </div>
         </div>
 
-        <div v-if="expTotalPages > 1" class="pagination">
-          <button :disabled="expPage === 1" @click="changeExpPage(expPage - 1)">上一页</button>
+        <div
+          v-if="expTotalPages > 1"
+          class="pagination"
+        >
+          <button
+            :disabled="expPage === 1"
+            @click="changeExpPage(expPage - 1)"
+          >
+            上一页
+          </button>
           <span class="page-info">{{ expPage }} / {{ expTotalPages }}</span>
-          <button :disabled="expPage >= expTotalPages" @click="changeExpPage(expPage + 1)">下一页</button>
+          <button
+            :disabled="expPage >= expTotalPages"
+            @click="changeExpPage(expPage + 1)"
+          >
+            下一页
+          </button>
         </div>
       </div>
     </template>
@@ -72,7 +112,7 @@ const nextExpNeed = computed(() => {
 
 const loadLevelInfo = async () => {
   try {
-    const res = await request.get('/api/user/level')
+    const res = await request.get('/user/level')
     if (res.code === 200) levelInfo.value = res.data
   } catch (err) {
     console.error('获取等级信息失败', err)
@@ -81,7 +121,7 @@ const loadLevelInfo = async () => {
 
 const loadExpHistory = async () => {
   try {
-    const res = await request.get('/api/user/exp', { params: { page: expPage.value, limit: expLimit } })
+    const res = await request.get('/user/exp', { params: { page: expPage.value, limit: expLimit } })
     if (res.code === 200) {
       expHistory.value = res.data.list
       expTotal.value = res.data.total

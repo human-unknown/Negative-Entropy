@@ -50,7 +50,7 @@
 **Files:**
 - Create: `backend/sql/27_debate_template.sql`
 
-- [ ] **Step 1: 写入 SQL 建表语句**
+- [x] **Step 1: 写入 SQL 建表语句**
 
 ```sql
 CREATE TABLE `debate_template` (
@@ -80,7 +80,7 @@ INSERT INTO `debate_template` (`name`, `type`, `description`, `config`) VALUES
 **Files:**
 - Create: `backend/sql/28_debate_round.sql`
 
-- [ ] **Step 1: 写入 SQL 建表语句**
+- [x] **Step 1: 写入 SQL 建表语句**
 
 ```sql
 CREATE TABLE `debate_round` (
@@ -109,7 +109,7 @@ CREATE TABLE `debate_round` (
 **Files:**
 - Create: `backend/sql/29_debate_score.sql`
 
-- [ ] **Step 1: 写入 SQL 建表语句**
+- [x] **Step 1: 写入 SQL 建表语句**
 
 ```sql
 CREATE TABLE `debate_score` (
@@ -133,7 +133,7 @@ CREATE TABLE `debate_score` (
 **Files:**
 - Create: `backend/sql/30_debate_topic_alter.sql`
 
-- [ ] **Step 1: 写入 ALTER TABLE 语句**
+- [x] **Step 1: 写入 ALTER TABLE 语句**
 
 ```sql
 ALTER TABLE `debate_topic`
@@ -152,7 +152,7 @@ ALTER TABLE `debate_topic`
 - Create: `backend/src/controllers/templateController.js`
 - Test: `backend/src/__tests__/templateController.test.js`
 
-- [ ] **Step 1: 写入 templateController**
+- [x] **Step 1: 写入 templateController**
 
 ```javascript
 import pool from '../config/database.js'
@@ -209,7 +209,7 @@ export const createTemplate = async (req, res) => {
 }
 ```
 
-- [ ] **Step 2: 写入测试文件**
+- [x] **Step 2: 写入测试文件**
 
 ```javascript
 import { describe, it } from 'node:test'
@@ -274,7 +274,7 @@ describe('templateController - createTemplate', () => {
 **Files:**
 - Create: `backend/src/routes/templateRoutes.js`
 
-- [ ] **Step 1: 写入路由文件**
+- [x] **Step 1: 写入路由文件**
 
 ```javascript
 import express from 'express'
@@ -297,7 +297,7 @@ export default router
 - Create: `backend/src/utils/roundEngine.js`
 - Test: `backend/src/__tests__/roundEngine.test.js`
 
-- [ ] **Step 1: 写入轮次引擎**
+- [x] **Step 1: 写入轮次引擎**
 
 ```javascript
 import { DEBATE_STATUS } from '../constants/debateStatus.js'
@@ -471,7 +471,7 @@ export const flipFreeDebateSpeaker = async (conn, topicId, speakerStance) => {
 }
 ```
 
-- [ ] **Step 2: 写入 roundEngine 测试**
+- [x] **Step 2: 写入 roundEngine 测试**
 
 ```javascript
 import { describe, it, mock } from 'node:test'
@@ -528,7 +528,7 @@ describe('roundEngine - advanceRound', () => {
 **Files:**
 - Create: `backend/src/controllers/structuredDebateController.js`
 
-- [ ] **Step 1: 写入控制器**
+- [x] **Step 1: 写入控制器**
 
 ```javascript
 import pool from '../config/database.js'
@@ -776,7 +776,7 @@ export const skipRound = async (req, res) => {
 - Create: `backend/src/controllers/scoreController.js`
 - Test: `backend/src/__tests__/scoreController.test.js`
 
-- [ ] **Step 1: 写入评分控制器**
+- [x] **Step 1: 写入评分控制器**
 
 ```javascript
 import pool from '../config/database.js'
@@ -940,7 +940,7 @@ export const getScoreResult = async (req, res) => {
 }
 ```
 
-- [ ] **Step 2: 写入评分测试**
+- [x] **Step 2: 写入评分测试**
 
 ```javascript
 import { describe, it } from 'node:test'
@@ -1003,7 +1003,7 @@ describe('scoreController - getScoreResult', () => {
 **Files:**
 - Create: `backend/src/routes/scoreRoutes.js`
 
-- [ ] **Step 1: 写入路由**
+- [x] **Step 1: 写入路由**
 
 ```javascript
 import express from 'express'
@@ -1024,7 +1024,7 @@ export default router
 - Modify: `backend/src/controllers/debateController.js` — `createTopic` 和 `joinTopic`
 - Modify: `backend/src/routes/debateRoutes.js` — 新路由
 
-- [ ] **Step 1: createTopic 增加 templateId 支持**
+- [x] **Step 1: createTopic 增加 templateId 支持**
 
 在 `createTopic` 函数中，提取 `templateId` 并校验：
 
@@ -1054,7 +1054,7 @@ if (templateId) {
 }
 ```
 
-- [ ] **Step 2: joinTopic 增加模板轮次创建逻辑**
+- [x] **Step 2: joinTopic 增加模板轮次创建逻辑**
 
 在 `joinTopic` 的 `INSERT INTO debate_participant` 之后（原行 225），`await conn.commit()` 之前，增加：
 
@@ -1098,7 +1098,7 @@ if (topicInfo[0].template_id) {
 import { createRounds } from '../utils/roundEngine.js'
 ```
 
-- [ ] **Step 3: 修改 debateRoutes.js 挂载新路由**
+- [x] **Step 3: 修改 debateRoutes.js 挂载新路由**
 
 ```javascript
 // 在路由文件中增加：
@@ -1118,7 +1118,7 @@ router.post('/topics/:topicId/rounds/:roundId/skip', auth, skipRound)
 **Files:**
 - Modify: `backend/src/app.js`
 
-- [ ] **Step 1: 注册新路由**
+- [x] **Step 1: 注册新路由**
 
 ```javascript
 // 在文件顶部增加 import：
@@ -1139,7 +1139,7 @@ app.use('/api/debate', scoreRoutes)
 **Files:**
 - Create: `frontend/src/api/template.js`
 
-- [ ] **Step 1: 写入 API 层**
+- [x] **Step 1: 写入 API 层**
 
 ```javascript
 import request from './request'
@@ -1158,7 +1158,7 @@ export const getTemplateDetail = (id) => {
 **Files:**
 - Create: `frontend/src/api/round.js`
 
-- [ ] **Step 1: 写入 API 层**
+- [x] **Step 1: 写入 API 层**
 
 ```javascript
 import request from './request'
@@ -1185,7 +1185,7 @@ export const skipRound = (topicId, roundId) => {
 **Files:**
 - Create: `frontend/src/api/score.js`
 
-- [ ] **Step 1: 写入 API 层**
+- [x] **Step 1: 写入 API 层**
 
 ```javascript
 import request from './request'
@@ -1204,7 +1204,7 @@ export const getScoreResult = (topicId) => {
 **Files:**
 - Create: `frontend/src/components/DebateTemplateSelector.vue`
 
-- [ ] **Step 1: 写入组件**
+- [x] **Step 1: 写入组件**
 
 ```vue
 <template>
@@ -1396,7 +1396,7 @@ const formatDuration = (sec) => {
 - Create: `frontend/src/components/DebateRoundTimer.vue`
 - Test: `frontend/src/__tests__/DebateRoundTimer.test.js`
 
-- [ ] **Step 1: 写入组件**
+- [x] **Step 1: 写入组件**
 
 ```vue
 <template>
@@ -1639,7 +1639,7 @@ onUnmounted(() => {
 </style>
 ```
 
-- [ ] **Step 2: 写入计时器测试**
+- [x] **Step 2: 写入计时器测试**
 
 ```javascript
 import { describe, it, expect } from 'vitest'
@@ -1700,7 +1700,7 @@ describe('DebateRoundTimer', () => {
 **Files:**
 - Create: `frontend/src/components/DebateScorePanel.vue`
 
-- [ ] **Step 1: 写入评分面板**
+- [x] **Step 1: 写入评分面板**
 
 ```vue
 <template>
@@ -1972,7 +1972,7 @@ h3 {
 **Files:**
 - Modify: `frontend/src/views/DebateCreate.vue`
 
-- [ ] **Step 1: 插入模板选择器**
+- [x] **Step 1: 插入模板选择器**
 
 在 `form-item` (分类) 和 `form-row` (人数) 之间插入模板选择器：
 
@@ -2009,7 +2009,7 @@ const form = reactive({
 **Files:**
 - Modify: `frontend/src/views/DebateFlow.vue`
 
-- [ ] **Step 1: 集成轮次系统**
+- [x] **Step 1: 集成轮次系统**
 
 在模板中，步骤 2 区域增加轮次计时器：
 

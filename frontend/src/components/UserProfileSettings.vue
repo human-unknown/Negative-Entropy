@@ -1,21 +1,41 @@
 <template>
   <div class="profile-settings">
-    <h3 class="section-title">系统设置</h3>
+    <h3 class="section-title">
+      系统设置
+    </h3>
 
     <div class="settings-list">
       <div class="setting-item">
         <div class="setting-info">
-          <div class="setting-label">意见反馈</div>
-          <div class="setting-desc">告诉我们您的想法，帮助我们改进平台</div>
+          <div class="setting-label">
+            意见反馈
+          </div>
+          <div class="setting-desc">
+            告诉我们您的想法，帮助我们改进平台
+          </div>
         </div>
-        <button class="setting-btn" @click="showFeedback = true">去反馈</button>
+        <button
+          class="setting-btn"
+          @click="showFeedback = true"
+        >
+          去反馈
+        </button>
       </div>
     </div>
 
-    <div v-if="showFeedback" class="feedback-overlay" @click.self="showFeedback = false">
+    <div
+      v-if="showFeedback"
+      class="feedback-overlay"
+      @click.self="showFeedback = false"
+    >
       <div class="feedback-wrapper">
         <FeedbackForm />
-        <button class="close-feedback-btn" @click="showFeedback = false">关闭</button>
+        <button
+          class="close-feedback-btn"
+          @click="showFeedback = false"
+        >
+          关闭
+        </button>
       </div>
     </div>
   </div>

@@ -1,22 +1,59 @@
 <template>
-  <div ref="bellRef" class="notification-bell">
-    <button class="bell-btn" @click="toggleDropdown">
-      <svg class="bell-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+  <div
+    ref="bellRef"
+    class="notification-bell"
+  >
+    <button
+      class="bell-btn"
+      @click="toggleDropdown"
+    >
+      <svg
+        class="bell-icon"
+        viewBox="0 0 24 24"
+        width="22"
+        height="22"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
       </svg>
-      <span v-if="unreadCount > 0" class="badge">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
+      <span
+        v-if="unreadCount > 0"
+        class="badge"
+      >{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
     </button>
 
     <Teleport to="body">
-      <div v-if="showDropdown" class="bell-dropdown" :style="dropdownStyle">
+      <div
+        v-if="showDropdown"
+        class="bell-dropdown"
+        :style="dropdownStyle"
+      >
         <div class="dropdown-header">
           <span class="dropdown-title">通知</span>
-          <button v-if="unreadCount > 0" class="mark-all-btn" @click="handleMarkAllRead">全部标记已读</button>
+          <button
+            v-if="unreadCount > 0"
+            class="mark-all-btn"
+            @click="handleMarkAllRead"
+          >
+            全部标记已读
+          </button>
         </div>
         <div class="dropdown-body">
-          <div v-if="loading" class="dropdown-loading">加载中...</div>
-          <div v-else-if="notifications.length === 0" class="dropdown-empty">暂无通知</div>
+          <div
+            v-if="loading"
+            class="dropdown-loading"
+          >
+            加载中...
+          </div>
+          <div
+            v-else-if="notifications.length === 0"
+            class="dropdown-empty"
+          >
+            暂无通知
+          </div>
           <div
             v-for="item in notifications"
             v-else
@@ -26,7 +63,9 @@
           >
             <span class="noti-icon">{{ getTypeIcon(item.type) }}</span>
             <div class="noti-content">
-              <p class="noti-text">{{ item.content }}</p>
+              <p class="noti-text">
+                {{ item.content }}
+              </p>
               <span class="noti-time">{{ formatTime(item.created_at) }}</span>
             </div>
           </div>

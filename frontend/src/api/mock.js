@@ -31,6 +31,8 @@ const initMockData = () => {
       publisher_name: '张三',
       participant_count: 15,
       heat: 230,
+      pro_limit: 5,
+      con_limit: 5,
       created_at: new Date(Date.now() - 86400000).toISOString(),
       pro_count: 8,
       con_count: 7
@@ -45,6 +47,8 @@ const initMockData = () => {
       publisher_name: '李四',
       participant_count: 23,
       heat: 180,
+      pro_limit: 5,
+      con_limit: 5,
       created_at: new Date(Date.now() - 172800000).toISOString(),
       pro_count: 12,
       con_count: 11
@@ -59,6 +63,8 @@ const initMockData = () => {
       publisher_name: '王五',
       participant_count: 5,
       heat: 95,
+      pro_limit: 5,
+      con_limit: 5,
       created_at: new Date(Date.now() - 3600000).toISOString(),
       pro_count: 3,
       con_count: 2
@@ -89,8 +95,8 @@ const initMockData = () => {
 
 initMockData()
 
-// 通知 Mock 数据
-let mockNotificationId = 0
+  // 通知 Mock 数据
+  let mockNotificationId = 0
 let mockNotifications = []
 const initMockNotifications = () => {
   mockNotifications = [
@@ -460,5 +466,26 @@ export const mockApi = {
         progress: user.level >= 3 ? 100 : Math.min(Math.round((user.exp / (user.level === 1 ? 500 : 1000)) * 100), 100)
       }
     }
+  },
+
+  // ---- 结构化辩论轮次 API ----
+  getCurrentRound: async () => {
+    // 普通辩论没有模板，返回 isFreeDebate: true
+    return { code: 200, data: { isFreeDebate: true } }
+  },
+  getRounds: async () => {
+    return { code: 200, data: [] }
+  },
+  submitRound: async () => {
+    return { code: 200, data: {}, message: '发言已提交' }
+  },
+  skipRound: async () => {
+    return { code: 200, data: {}, message: '已跳过该轮次' }
+  },
+  getScoreResult: async () => {
+    return { code: 404, message: '辩论结果不存在' }
+  },
+  submitScore: async () => {
+    return { code: 200, message: '评分已提交' }
   }
 }

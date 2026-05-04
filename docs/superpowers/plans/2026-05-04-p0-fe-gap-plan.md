@@ -33,7 +33,7 @@
 **Files:**
 - Create: `frontend/src/api/notification.js`
 
-- [ ] **Step 1: 创建 notification.js**
+- [x] **Step 1: 创建 notification.js**
   ```javascript
   import request from './request'
 
@@ -70,7 +70,7 @@
   export default { getNotifications, getUnreadCount, markAsRead, markAllAsRead }
   ```
 
-- [ ] **Step 2: 验证文件可导入**
+- [x] **Step 2: 验证文件可导入**
   Run: `cd /c/Users/34270/Desktop/negative-entropy && node -e "import('./frontend/src/api/notification.js').then(m => console.log(Object.keys(m)))"`
 
 ---
@@ -80,7 +80,7 @@
 **Files:**
 - Modify: `frontend/src/api/mock.js`（在文件已有 mockApi 对象中追加方法）
 
-- [ ] **Step 1: 追加通知相关 mock 状态和数据**
+- [x] **Step 1: 追加通知相关 mock 状态和数据**
   在文件顶部 `let currentRuleDebateId = 0` 附近追加：
   ```javascript
   // 通知 Mock 数据
@@ -98,7 +98,7 @@
   initMockNotifications()
   ```
 
-- [ ] **Step 2: 在 mockApi 对象中追加通知方法**
+- [x] **Step 2: 在 mockApi 对象中追加通知方法**
   在 mockApi 的末尾（`createRuleDebate` 之后）追加：
   ```javascript
   // 获取通知列表
@@ -183,7 +183,7 @@
   }
   ```
 
-- [ ] **Step 3: 在文件顶部 `initMockData()` 之后调用 `initMockNotifications()`**
+- [x] **Step 3: 在文件顶部 `initMockData()` 之后调用 `initMockNotifications()`**
   找到 `initMockData()` 的调用处，在其后添加 `initMockNotifications()`
 
 ---
@@ -193,7 +193,7 @@
 **Files:**
 - Modify: `frontend/src/api/request.js`（handleMockRequest 函数）
 
-- [ ] **Step 1: 在 handleMockRequest 末尾追加通知/用户路由**
+- [x] **Step 1: 在 handleMockRequest 末尾追加通知/用户路由**
   在最后一个 `return { code: 200, ... }` 之前添加：
   ```javascript
   // 通知系统
@@ -218,7 +218,7 @@
 **Files:**
 - Create: `frontend/src/components/NotificationBell.vue`
 
-- [ ] **Step 1: 创建 NotificationBell.vue 模板**
+- [x] **Step 1: 创建 NotificationBell.vue 模板**
   ```vue
   <template>
     <div ref="bellRef" class="notification-bell">
@@ -556,7 +556,7 @@
 **Files:**
 - Create: `frontend/src/components/UserDropdownMenu.vue`
 
-- [ ] **Step 1: 创建 UserDropdownMenu.vue**
+- [x] **Step 1: 创建 UserDropdownMenu.vue**
   ```vue
   <template>
     <div ref="menuRef" class="user-dropdown">
@@ -836,7 +836,7 @@
 **Files:**
 - Create: `frontend/src/components/AppLayout.vue`
 
-- [ ] **Step 1: 创建 AppLayout.vue**
+- [x] **Step 1: 创建 AppLayout.vue**
   ```vue
   <template>
     <div class="app-layout">
@@ -1011,7 +1011,7 @@
 - Modify: `frontend/src/router/index.js`
 - Modify: `frontend/src/App.vue`
 
-- [ ] **Step 1: router/index.js — 给需要布局的路由添加 meta**
+- [x] **Step 1: router/index.js — 给需要布局的路由添加 meta**
   在现有的每条路由对象中，对以下路由添加 `meta: { requiresLayout: true }`：
   - DebateList (`/debates`)
   - DebateCreate (`/debates/create`)
@@ -1040,7 +1040,7 @@
   },
   ```
 
-- [ ] **Step 2: App.vue — 按条件渲染**
+- [x] **Step 2: App.vue — 按条件渲染**
   修改 `App.vue` 的 `<template>`：
   ```vue
   <template>
@@ -1079,7 +1079,7 @@
   // ... 其余函数保持不动
   ```
 
-- [ ] **Step 3: 验证编译**
+- [x] **Step 3: 验证编译**
   Run: `cd /c/Users/34270/Desktop/negative-entropy/frontend && npx vite build 2>&1 | head -30`
 
 ---
@@ -1089,7 +1089,7 @@
 **Files:**
 - Create: `frontend/src/components/UserDebates.vue`
 
-- [ ] **Step 1: 创建 UserDebates.vue**
+- [x] **Step 1: 创建 UserDebates.vue**
   ```vue
   <template>
     <div class="user-debates">
@@ -1295,7 +1295,7 @@
 **Files:**
 - Create: `frontend/src/components/UserStats.vue`
 
-- [ ] **Step 1: 创建 UserStats.vue**
+- [x] **Step 1: 创建 UserStats.vue**
   ```vue
   <template>
     <div class="user-stats">
@@ -1539,7 +1539,7 @@
 **Files:**
 - Create: `frontend/src/components/UserProfileSettings.vue`
 
-- [ ] **Step 1: 创建 UserProfileSettings.vue**
+- [x] **Step 1: 创建 UserProfileSettings.vue**
   ```vue
   <template>
     <div class="profile-settings">
@@ -1668,7 +1668,7 @@
 **Files:**
 - Modify: `frontend/src/views/UserProfile.vue`
 
-- [ ] **Step 1: 充实 <template> 中的条件渲染**
+- [x] **Step 1: 充实 <template> 中的条件渲染**
   替换现有的 placeholder 条件：
   ```vue
   <main class="profile-main">
@@ -1690,7 +1690,7 @@
   </main>
   ```
 
-- [ ] **Step 2: 充实 <script setup>**
+- [x] **Step 2: 充实 <script setup>**
   导入新组件并补充用户数据逻辑：
   ```vue
   <script setup>
@@ -1736,7 +1736,7 @@
 
   同时删除旧的 `activeTab = ref('security')` 替换为 `activeTab = ref(route.query.tab || 'info')`
 
-- [ ] **Step 3: 验证编译**
+- [x] **Step 3: 验证编译**
   Run: `cd /c/Users/34270/Desktop/negative-entropy/frontend && npx vite build 2>&1 | tail -20`
 
 ---

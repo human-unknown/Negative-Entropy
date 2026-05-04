@@ -98,12 +98,12 @@ onMounted(async () => {
     try {
       const user = JSON.parse(userStr)
       userInfo.value = user
-    } catch {}
+    } catch { /* 忽略无效的用户数据 */ }
   }
 
   // 获取等级信息
   try {
-    const res = await request.get('/api/user/level')
+    const res = await request.get('/user/level')
     if (res.code === 200) {
       levelInfo.value = res.data
       userInfo.value.level = res.data.level

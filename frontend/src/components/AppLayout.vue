@@ -2,7 +2,12 @@
   <div class="app-layout">
     <nav class="nav-bar">
       <div class="nav-left">
-        <router-link to="/debates" class="logo">逆熵</router-link>
+        <router-link
+          to="/debates"
+          class="logo"
+        >
+          逆熵
+        </router-link>
         <div class="nav-search">
           <SearchBox />
         </div>

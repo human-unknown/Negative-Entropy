@@ -1,34 +1,82 @@
 <template>
   <div class="user-debates">
-    <h3 class="section-title">我的辩论</h3>
+    <h3 class="section-title">
+      我的辩论
+    </h3>
 
-    <div v-if="loading" class="loading">加载中...</div>
-    <div v-else-if="debates.length === 0" class="empty">暂无辩论记录</div>
+    <div
+      v-if="loading"
+      class="loading"
+    >
+      加载中...
+    </div>
+    <div
+      v-else-if="debates.length === 0"
+      class="empty"
+    >
+      暂无辩论记录
+    </div>
 
-    <div v-else class="debate-list">
-      <div v-for="item in debates" :key="item.id" class="debate-item">
+    <div
+      v-else
+      class="debate-list"
+    >
+      <div
+        v-for="item in debates"
+        :key="item.id"
+        class="debate-item"
+      >
         <div class="debate-info">
-          <div class="debate-title">{{ item.title }}</div>
+          <div class="debate-title">
+            {{ item.title }}
+          </div>
           <div class="debate-meta">
             <span :class="['status-tag', `status-${item.status}`]">
               {{ statusLabels[item.status] || '未知' }}
             </span>
-            <span class="stance-tag" :class="item.stance === 1 ? 'pro' : 'con'">
+            <span
+              class="stance-tag"
+              :class="item.stance === 1 ? 'pro' : 'con'"
+            >
               {{ item.stance === 1 ? '正方' : '反方' }}
             </span>
-            <span v-if="item.winner === 'pro'" class="winner-tag">正方胜</span>
-            <span v-else-if="item.winner === 'con'" class="winner-tag">反方胜</span>
+            <span
+              v-if="item.winner === 'pro'"
+              class="winner-tag"
+            >正方胜</span>
+            <span
+              v-else-if="item.winner === 'con'"
+              class="winner-tag"
+            >反方胜</span>
             <span class="debate-time">{{ formatTime(item.created_at) }}</span>
           </div>
         </div>
-        <button class="view-btn" @click="goToDebate(item.id)">查看</button>
+        <button
+          class="view-btn"
+          @click="goToDebate(item.id)"
+        >
+          查看
+        </button>
       </div>
     </div>
 
-    <div v-if="totalPages > 1" class="pagination">
-      <button :disabled="page === 1" @click="changePage(page - 1)">上一页</button>
+    <div
+      v-if="totalPages > 1"
+      class="pagination"
+    >
+      <button
+        :disabled="page === 1"
+        @click="changePage(page - 1)"
+      >
+        上一页
+      </button>
       <span class="page-info">{{ page }} / {{ totalPages }}</span>
-      <button :disabled="page >= totalPages" @click="changePage(page + 1)">下一页</button>
+      <button
+        :disabled="page >= totalPages"
+        @click="changePage(page + 1)"
+      >
+        下一页
+      </button>
     </div>
   </div>
 </template>
@@ -51,7 +99,7 @@ const totalPages = computed(() => Math.ceil(total.value / limit))
 const loadDebates = async () => {
   loading.value = true
   try {
-    const res = await request.get('/api/user/debates', { params: { page: page.value, limit } })
+    const res = await request.get('/user/debates', { params: { page: page.value, limit } })
     if (res.code === 200) {
       debates.value = res.data.debates
       total.value = res.data.total

@@ -1,42 +1,82 @@
 <template>
-  <div ref="menuRef" class="user-dropdown">
-    <button class="user-trigger" @click="toggleMenu">
-      <div class="user-avatar">{{ userName.charAt(0) }}</div>
+  <div
+    ref="menuRef"
+    class="user-dropdown"
+  >
+    <button
+      class="user-trigger"
+      @click="toggleMenu"
+    >
+      <div class="user-avatar">
+        {{ userName.charAt(0) }}
+      </div>
       <span class="user-name">{{ userName }}</span>
-      <svg class="chevron" :class="{ open: showMenu }" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-        <path d="M7 10l5 5 5-5z"/>
+      <svg
+        class="chevron"
+        :class="{ open: showMenu }"
+        viewBox="0 0 24 24"
+        width="16"
+        height="16"
+        fill="currentColor"
+      >
+        <path d="M7 10l5 5 5-5z" />
       </svg>
     </button>
 
     <Teleport to="body">
-      <div v-if="showMenu" class="dropdown-menu" :style="menuStyle">
+      <div
+        v-if="showMenu"
+        class="dropdown-menu"
+        :style="menuStyle"
+      >
         <div class="menu-header">
-          <div class="menu-user-avatar">{{ userName.charAt(0) }}</div>
+          <div class="menu-user-avatar">
+            {{ userName.charAt(0) }}
+          </div>
           <div class="menu-user-info">
-            <div class="menu-user-name">{{ userName }}</div>
-            <div class="menu-user-level">Lv.{{ userLevel }} {{ levelText }}</div>
+            <div class="menu-user-name">
+              {{ userName }}
+            </div>
+            <div class="menu-user-level">
+              Lv.{{ userLevel }} {{ levelText }}
+            </div>
           </div>
         </div>
-        <div class="menu-divider"/>
-        <div class="menu-item" @click="handleNavigate('/profile')">
+        <div class="menu-divider" />
+        <div
+          class="menu-item"
+          @click="handleNavigate('/profile')"
+        >
           <span class="menu-item-icon">&#x2766;</span>
           <span>个人中心</span>
         </div>
-        <div class="menu-item" @click="handleNavigate('/profile', 'security')">
+        <div
+          class="menu-item"
+          @click="handleNavigate('/profile', 'security')"
+        >
           <span class="menu-item-icon">&#x1F512;</span>
           <span>账号安全</span>
         </div>
-        <div class="menu-item" @click="handleNavigate('/profile')">
+        <div
+          class="menu-item"
+          @click="handleNavigate('/profile')"
+        >
           <span class="menu-item-icon">&#x1F514;</span>
           <span>通知中心</span>
         </div>
-        <div class="menu-divider"/>
-        <div class="menu-item" @click="handleFeedback">
+        <div class="menu-divider" />
+        <div
+          class="menu-item"
+          @click="handleFeedback"
+        >
           <span class="menu-item-icon">&#x2709;</span>
           <span>意见反馈</span>
         </div>
-        <div class="menu-divider"/>
-        <div class="menu-item menu-item-danger" @click="handleLogout">
+        <div class="menu-divider" />
+        <div
+          class="menu-item menu-item-danger"
+          @click="handleLogout"
+        >
           <span class="menu-item-icon">&#x1F6AA;</span>
           <span>退出登录</span>
         </div>
@@ -44,7 +84,11 @@
     </Teleport>
 
     <!-- 反馈弹窗 -->
-    <div v-if="showFeedback" class="feedback-overlay" @click.self="showFeedback = false">
+    <div
+      v-if="showFeedback"
+      class="feedback-overlay"
+      @click.self="showFeedback = false"
+    >
       <div class="feedback-wrapper">
         <FeedbackForm @close="showFeedback = false" />
       </div>

@@ -2,6 +2,7 @@ import pool from '../config/database.js'
 import { success, error } from '../utils/response.js'
 import { USER_LEVEL } from '../constants/userLevel.js'
 import { DEBATE_STATUS } from '../constants/debateStatus.js'
+import { createRounds } from '../utils/roundEngine.js'
 
 // 投票权重映射表
 const VOTE_WEIGHT_MAP = {
@@ -92,7 +93,7 @@ export const getTopics = async (req, res) => {
 export const createTopic = async (req, res) => {
   const conn = await pool.getConnection()
   try {
-    const { title, description, category, pro_limit = 5, con_limit = 5 } = req.body
+    const { title, description, category, pro_limit = 5, con_limit = 5, templateId } = req.body
     const userId = req.user.userId
 
     if (!title || !description || !category) {
@@ -120,6 +121,23 @@ export const createTopic = async (req, res) => {
     )
 
     const topicId = result.insertId
+
+    // 如果选择了辩论模板，验证并设置
+    if (templateId) {
+      const [templates] = await conn.query(
+        'SELECT id, type FROM debate_template WHERE id = ? AND is_active = 1',
+        [templateId]
+      )
+      if (!templates.length) {
+        await conn.rollback()
+        return res.json(error('模板不存在', 400))
+      }
+      // 模板辩论默认正反各1人
+      await conn.query(
+        'UPDATE debate_topic SET template_id = ?, pro_limit = 1, con_limit = 1 WHERE id = ?',
+        [templateId, topicId]
+      )
+    }
 
     // 如果需要人工复核，添加到复核队列
     if (needsManualReview) {
@@ -190,7 +208,7 @@ export const joinTopic = async (req, res) => {
     await conn.beginTransaction()
 
     const [topic] = await conn.query(
-      'SELECT pro_limit, con_limit, status FROM debate_topic WHERE id = ? AND audit_status = 1',
+      'SELECT pro_limit, con_limit, status, template_id FROM debate_topic WHERE id = ? AND audit_status = 1',
       [topicId]
     )
     if (!topic.length) {
@@ -226,6 +244,29 @@ export const joinTopic = async (req, res) => {
       'INSERT INTO debate_participant (topic_id, user_id, stance) VALUES (?, ?, ?)',
       [topicId, userId, stance]
     )
+
+    // 如果是模板辩论，检查双方是否已到齐
+    if (topic[0].template_id) {
+      const [participants] = await conn.query(
+        'SELECT stance, user_id FROM debate_participant WHERE topic_id = ? AND stance IN (0, 1)',
+        [topicId]
+      )
+      const proUser = participants.find(p => p.stance === 1)
+      const conUser = participants.find(p => p.stance === 0)
+
+      if (proUser && conUser) {
+        const [templates] = await conn.query(
+          'SELECT config FROM debate_template WHERE id = ?',
+          [topic[0].template_id]
+        )
+        if (templates.length) {
+          const config = typeof templates[0].config === 'string'
+            ? JSON.parse(templates[0].config)
+            : templates[0].config
+          await createRounds(conn, parseInt(topicId), config, proUser.user_id, conUser.user_id)
+        }
+      }
+    }
 
     await conn.commit()
     res.json(success(null, '加入成功'))

@@ -1,125 +1,125 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import { USER_LEVEL } from '@/constants/userLevel'
+import { useUserStore } from '@/stores/user'
 
 const routes = [
   {
     path: '/',
     name: 'Home',
-    component: () => import('@/views/Home.vue')
+    component: () => import('@/views/Home.vue'),
   },
   {
     path: '/register',
     name: 'Register',
-    component: () => import('@/views/Register.vue')
+    component: () => import('@/views/Register.vue'),
   },
   {
     path: '/reset-password',
     name: 'ResetPassword',
-    component: () => import('@/views/ResetPassword.vue')
+    component: () => import('@/views/ResetPassword.vue'),
   },
   {
     path: '/profile',
     name: 'UserProfile',
     component: () => import('@/views/UserProfile.vue'),
-    meta: { requiresAuth: true, minLevel: USER_LEVEL.BEGINNER, requiresLayout: true }
+    meta: { requiresAuth: true, minLevel: USER_LEVEL.BEGINNER, requiresLayout: true },
   },
   {
     path: '/check/logic',
     name: 'CheckLogic',
     component: () => import('@/views/CheckLogic.vue'),
-    meta: { requiresLayout: true }
+    meta: { requiresLayout: true },
   },
   {
     path: '/check/debate',
     name: 'CheckDebate',
     component: () => import('@/views/CheckDebate.vue'),
-    meta: { requiresLayout: true }
+    meta: { requiresLayout: true },
   },
   {
     path: '/check/result',
     name: 'CheckResult',
     component: () => import('@/views/CheckResult.vue'),
-    meta: { requiresLayout: true }
+    meta: { requiresLayout: true },
   },
   {
     path: '/debates',
     name: 'DebateList',
     component: () => import('@/views/DebateList.vue'),
-    meta: { requiresLayout: true }
+    meta: { requiresLayout: true },
   },
   {
     path: '/debates/create',
     name: 'DebateCreate',
     component: () => import('@/views/DebateCreate.vue'),
-    meta: { requiresAuth: true, minLevel: USER_LEVEL.ADVANCED, requiresLayout: true }
+    meta: { requiresAuth: true, minLevel: USER_LEVEL.ADVANCED, requiresLayout: true },
   },
   {
     path: '/debates/flow',
     name: 'DebateFlow',
     component: () => import('@/views/DebateFlow.vue'),
-    meta: { requiresAuth: true, minLevel: USER_LEVEL.BEGINNER, requiresLayout: true }
+    meta: { requiresAuth: true, minLevel: USER_LEVEL.BEGINNER, requiresLayout: true },
   },
   {
     path: '/admin',
     name: 'Admin',
     component: () => import('@/views/Admin.vue'),
-    meta: { requiresAuth: true, requiresAdmin: true, requiresLayout: true }
+    meta: { requiresAuth: true, requiresAdmin: true, requiresLayout: true },
   },
   {
     path: '/rules',
     name: 'RuleDebateList',
     component: () => import('@/views/RuleDebateList.vue'),
-    meta: { requiresLayout: true }
+    meta: { requiresLayout: true },
   },
   {
     path: '/rules/debate/:id',
     name: 'RuleDebateDetail',
     component: () => import('@/views/RuleDebateDetail.vue'),
-    meta: { requiresLayout: true }
+    meta: { requiresLayout: true },
   },
   {
     path: '/rules/history',
     name: 'RuleHistoryPage',
     component: () => import('@/views/RuleHistoryPage.vue'),
-    meta: { requiresLayout: true }
-  }
+    meta: { requiresLayout: true },
+  },
 ]
 
 const router = createRouter({
   history: createWebHashHistory(),
-  routes
+  routes,
 })
 
-router.beforeEach((to, from, next) => {
-  const token = localStorage.getItem('token')
-  const userStr = localStorage.getItem('user')
-  const user = userStr ? JSON.parse(userStr) : null
-  
-  // 严格校验：需要认证的路由必须有token和user
+router.beforeEach((to, _from, next) => {
+  const userStore = useUserStore()
+
+  // 严格校验：需要认证的路由必须有 token 和 user
   if (to.meta.requiresAuth) {
-    if (!token || !user) {
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
+    if (!userStore.isLoggedIn) {
+      userStore.logout()
       return next('/')
     }
   }
-  
+
   // 严格校验：管理员权限
   if (to.meta.requiresAdmin) {
-    if (!user || user.level !== USER_LEVEL.ADMIN) {
+    if (!userStore.isAdmin) {
       console.warn('权限不足：需要管理员权限')
       return next('/')
     }
   }
-  
+
   // 严格校验：等级权限
   if (to.meta.minLevel) {
-    if (!user || user.level < to.meta.minLevel) {
-      console.warn(`权限不足：需要等级 ${to.meta.minLevel}，当前等级 ${user?.level || 0}`)
+    if (userStore.userLevel < to.meta.minLevel) {
+      console.warn(
+        `权限不足：需要等级 ${to.meta.minLevel}，当前等级 ${userStore.userLevel}`,
+      )
       return next('/debates')
     }
   }
-  
+
   next()
 })
 

@@ -1,5 +1,7 @@
 import express from 'express'
 import cors from 'cors'
+import rateLimit from 'express-rate-limit'
+import helmet from 'helmet'
 import { errorHandler, timeoutMiddleware } from './middlewares/errorHandler.js'
 import authRoutes from './routes/authRoutes.js'
 import userRoutes from './routes/userRoutes.js'
@@ -20,8 +22,50 @@ import scoreRoutes from './routes/scoreRoutes.js'
 
 const app = express()
 
-// 中间件
-app.use(cors())
+// ---- 安全中间件 ----
+
+// 安全响应头 (CSP, X-Frame-Options, X-Content-Type-Options 等)
+app.use(helmet())
+
+// CORS — 生产环境白名单，开发环境宽松
+const corsOrigin =
+  process.env.NODE_ENV === 'production'
+    ? process.env.CORS_ORIGIN || 'https://your-production-domain.com'
+    : 'http://localhost:5173'
+
+app.use(
+  cors({
+    origin: corsOrigin,
+    credentials: true,
+  }),
+)
+
+// ---- 速率限制 ----
+
+// 全局限流：每个 IP 15 分钟内最多 100 次请求
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { code: 429, message: '请求过于频繁，请稍后再试' },
+})
+
+// 敏感端点限流：15 分钟内最多 10 次（登录/注册/验证码等）
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { code: 429, message: '操作过于频繁，请15分钟后再试' },
+})
+
+app.use('/api/', globalLimiter)
+app.use('/api/auth', authLimiter)
+app.use('/api/security', authLimiter)
+
+// ---- 解析中间件 ----
+
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 app.use(timeoutMiddleware(30000))
@@ -29,6 +73,17 @@ app.use(timeoutMiddleware(30000))
 // 健康检查
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: '服务运行正常' })
+})
+
+// 深度健康检查
+app.get('/health/deep', async (req, res) => {
+  try {
+    const pool = (await import('./config/database.js')).default
+    await pool.query('SELECT 1')
+    res.json({ status: 'ok', db: 'connected' })
+  } catch {
+    res.status(503).json({ status: 'error', db: 'disconnected' })
+  }
 })
 
 // 路由

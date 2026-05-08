@@ -1,4 +1,4 @@
-name: CI — Lint & Build
+name: CI — Lint, Test & Build
 
 on:
   pull_request:
@@ -7,8 +7,9 @@ on:
     branches: [main, master, develop]
 
 jobs:
-  lint-frontend:
-    name: Lint & Build — Frontend
+  # ========== 前端：Lint + Test + Build ==========
+  frontend:
+    name: Frontend — Lint, Test, Build
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -23,17 +24,33 @@ jobs:
       - run: npm ci
       - name: ESLint 检查
         run: npm run lint
-      - name: 构建验证
+      - name: Vitest 单元测试
+        run: npm test
+      - name: Vite 构建验证
         run: npm run build
         env:
           NODE_ENV: production
 
-  lint-backend:
-    name: Lint — Backend
+  # ========== 后端：Lint + Test ==========
+  backend:
+    name: Backend — Lint, Test
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: backend
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: test_root_pass
+          MYSQL_DATABASE: negentropy_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h localhost"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -44,3 +61,11 @@ jobs:
       - run: npm ci
       - name: ESLint 检查
         run: npm run lint
+      - name: Node:test 单元测试
+        run: npm test
+        env:
+          DB_HOST: localhost
+          DB_USER: root
+          DB_PASSWORD: test_root_pass
+          DB_NAME: negentropy_test
+          JWT_SECRET: ci-test-secret

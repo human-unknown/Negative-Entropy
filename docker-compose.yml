@@ -4,52 +4,92 @@ services:
   mysql:
     image: mysql:8.0
     container_name: negentropy-mysql
+    env_file:
+      - ./backend/.env.production
     environment:
-      MYSQL_ROOT_PASSWORD: root_password_change_me
-      MYSQL_DATABASE: negentropy_production
-      MYSQL_USER: negentropy_prod
-      MYSQL_PASSWORD: db_password_change_me
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
       - ./backend/sql:/docker-entrypoint-initdb.d
     ports:
-      - "3306:3306"
+      - '3306:3306'
     networks:
       - negentropy-network
     restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: negentropy-redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    ports:
+      - '6379:6379'
+    networks:
+      - negentropy-network
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'redis-cli', '--raw', 'incr', 'ping']
+      interval: 10s
+      timeout: 3s
+      retries: 5
 
   backend:
     build: ./backend
     container_name: negentropy-backend
+    env_file:
+      - ./backend/.env.production
     environment:
-      PORT: 3000
-      DB_HOST: mysql
-      DB_USER: negentropy_prod
-      DB_PASSWORD: db_password_change_me
-      DB_NAME: negentropy_production
-      JWT_SECRET: prod-jwt-secret-change-me
+      PORT: ${PORT}
+      DB_HOST: ${DB_HOST}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      JWT_SECRET: ${JWT_SECRET}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      CORS_ORIGIN: ${CORS_ORIGIN}
       NODE_ENV: production
     ports:
-      - "3000:3000"
+      - '3000:3000'
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - negentropy-network
     restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'node', '-e', "require('http').get('http://localhost:3000/health',r=>{process.exit(r.statusCode===200?0:1)})"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
 
   frontend:
     build: ./frontend
     container_name: negentropy-frontend
     ports:
-      - "80:80"
+      - '80:80'
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - negentropy-network
     restart: unless-stopped
 
 volumes:
   mysql_data:
+  redis_data:
 
 networks:
   negentropy-network:

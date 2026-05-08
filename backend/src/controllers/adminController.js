@@ -21,8 +21,9 @@ export const punishUser = async (req, res) => {
     return res.json(error('处罚类型无效', 400))
   }
 
-  const conn = await pool.getConnection()
+  let conn
   try {
+    conn = await pool.getConnection()
     await conn.beginTransaction()
 
     const [users] = await conn.query(
@@ -99,11 +100,11 @@ export const punishUser = async (req, res) => {
       expireAt
     }))
   } catch (err) {
-    await conn.rollback()
+    if (conn) await conn.rollback()
     console.error('处罚用户失败:', err)
     res.json(error('处罚失败', 500))
   } finally {
-    conn.release()
+    if (conn) conn.release()
   }
 }
 
@@ -115,8 +116,9 @@ export const restoreUser = async (req, res) => {
     return res.json(error('用户ID不能为空', 400))
   }
 
-  const conn = await pool.getConnection()
+  let conn
   try {
+    conn = await pool.getConnection()
     await conn.beginTransaction()
 
     const [users] = await conn.query(
@@ -158,11 +160,11 @@ export const restoreUser = async (req, res) => {
       userId
     }))
   } catch (err) {
-    await conn.rollback()
+    if (conn) await conn.rollback()
     console.error('恢复用户权限失败:', err)
     res.json(error('恢复权限失败', 500))
   } finally {
-    conn.release()
+    if (conn) conn.release()
   }
 }
 
@@ -286,8 +288,9 @@ export const reviewTopic = async (req, res) => {
     return res.json(error('驳回必须填写理由', 400))
   }
 
-  const conn = await pool.getConnection()
+  let conn
   try {
+    conn = await pool.getConnection()
     await conn.beginTransaction()
 
     const [topics] = await conn.query(
@@ -322,11 +325,11 @@ export const reviewTopic = async (req, res) => {
       topicId
     }))
   } catch (err) {
-    await conn.rollback()
+    if (conn) await conn.rollback()
     console.error('审核话题失败:', err)
     res.json(error('审核失败', 500))
   } finally {
-    conn.release()
+    if (conn) conn.release()
   }
 }
 
@@ -355,8 +358,9 @@ export const submitAIOptimization = async (req, res) => {
     return res.json(error('标记数据不能为空', 400))
   }
 
-  const conn = await pool.getConnection()
+  let conn
   try {
+    conn = await pool.getConnection()
     await conn.beginTransaction()
 
     for (const label of labels) {
@@ -380,11 +384,11 @@ export const submitAIOptimization = async (req, res) => {
 
     res.json(success({ message: '优化数据已提交', count: labels.length }))
   } catch (err) {
-    await conn.rollback()
+    if (conn) await conn.rollback()
     console.error('提交优化数据失败:', err)
     res.json(error('提交失败', 500))
   } finally {
-    conn.release()
+    if (conn) conn.release()
   }
 }
 

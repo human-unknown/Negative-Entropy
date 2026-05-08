@@ -1,15 +1,16 @@
 import { error } from '../utils/response.js'
+import logger from '../utils/logger.js'
 
 export const errorHandler = (err, req, res, next) => {
-  console.error('错误:', err)
-  
+  logger.error({ err, path: req.path, method: req.method }, '请求处理错误')
+
   if (res.headersSent) {
     return next(err)
   }
-  
+
   let statusCode = err.statusCode || 500
   let message = err.message || '服务器内部错误'
-  
+
   if (err.code === 'ETIMEDOUT' || err.code === 'ESOCKETTIMEDOUT') {
     statusCode = 408
     message = '请求超时，请稍后重试'
@@ -29,7 +30,7 @@ export const errorHandler = (err, req, res, next) => {
     statusCode = 400
     message = '参数验证失败'
   }
-  
+
   res.status(statusCode).json(error(message, statusCode))
 }
 
@@ -41,13 +42,13 @@ export const timeoutMiddleware = (timeout = 30000) => {
       err.statusCode = 408
       next(err)
     })
-    
+
     res.setTimeout(timeout, () => {
       if (!res.headersSent) {
         res.status(408).json(error('响应超时，请稍后重试', 408))
       }
     })
-    
+
     next()
   }
 }

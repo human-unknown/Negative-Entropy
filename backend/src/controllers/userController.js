@@ -153,8 +153,9 @@ export const getUserDebates = async (req, res) => {
   const { page = 1, limit = 10 } = req.query
   const offset = (page - 1) * limit
 
-  const conn = await pool.getConnection()
+  let conn
   try {
+    conn = await pool.getConnection()
     const [debates] = await conn.query(
       `SELECT
         dt.id, dt.title, dt.status, dt.created_at,
@@ -179,7 +180,7 @@ export const getUserDebates = async (req, res) => {
     console.error('查询辩论历史失败:', err)
     res.json(error('查询失败', 500))
   } finally {
-    conn.release()
+    if (conn) conn.release()
   }
 }
 

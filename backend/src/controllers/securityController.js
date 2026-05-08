@@ -1,16 +1,26 @@
 import bcrypt from 'bcryptjs'
 import pool from '../config/database.js'
 import { success, error } from '../utils/response.js'
+import {
+  setVerificationCode,
+  getVerificationCode,
+  deleteVerificationCode,
+  CODE_PREFIX_RESET,
+  CODE_PREFIX_2FA,
+} from '../config/redis.js'
 
-// 验证码存储（生产环境应使用Redis）
-const verificationCodes = new Map()
-
-// 模拟用户数据（用于测试）
+// 模拟用户数据（仅用于数据库不可用时的降级测试）
 const mockUsers = new Map([
   ['13800138000', { id: 1, phone: '13800138000', email: 'test@example.com', password: '' }],
-  ['test@example.com', { id: 1, phone: '13800138000', email: 'test@example.com', password: '' }]
+  ['test@example.com', { id: 1, phone: '13800138000', email: 'test@example.com', password: '' }],
 ])
 
+/** 生成 6 位随机验证码 */
+function generateCode() {
+  return Math.floor(100000 + Math.random() * 900000).toString()
+}
+
+/** 发送找回密码验证码 */
 export const sendResetCode = async (req, res) => {
   const { account } = req.body
 
@@ -20,12 +30,11 @@ export const sendResetCode = async (req, res) => {
 
   try {
     let user = null
-    
-    // 尝试从数据库查询
+
     try {
       const [users] = await pool.query(
         'SELECT id, phone, email FROM user WHERE (phone = ? OR email = ?) AND is_deleted = 0',
-        [account, account]
+        [account, account],
       )
       if (users.length > 0) {
         user = users[0]
@@ -39,16 +48,11 @@ export const sendResetCode = async (req, res) => {
       return res.json(error('账号不存在', 404))
     }
 
-    const code = Math.floor(100000 + Math.random() * 900000).toString()
-    
-    verificationCodes.set(account, {
-      code,
-      userId: user.id,
-      expires: Date.now() + 10 * 60 * 1000 // 10分钟有效
-    })
+    const code = generateCode()
+    await setVerificationCode(`${CODE_PREFIX_RESET}${account}`, code, 600)
 
-    // 模拟发送（生产环境调用短信/邮件服务）
-    console.log(`验证码已发送至 ${account}: ${code}`)
+    // 生产环境应接入短信/邮件服务
+    console.log(`[验证码] 重置密码 → ${account}: ${code}`)
 
     res.json(success({ message: '验证码已发送' }))
   } catch (err) {
@@ -57,6 +61,7 @@ export const sendResetCode = async (req, res) => {
   }
 }
 
+/** 重置密码 */
 export const resetPassword = async (req, res) => {
   const { account, code, newPassword } = req.body
 
@@ -68,31 +73,34 @@ export const resetPassword = async (req, res) => {
     return res.json(error('密码至少6个字符', 400))
   }
 
-  const stored = verificationCodes.get(account)
-  if (!stored || stored.code !== code) {
-    return res.json(error('验证码错误', 400))
-  }
-
-  if (Date.now() > stored.expires) {
-    verificationCodes.delete(account)
-    return res.json(error('验证码已过期', 400))
-  }
-
   try {
+    const storedCode = await getVerificationCode(`${CODE_PREFIX_RESET}${account}`)
+
+    if (!storedCode || storedCode !== code) {
+      return res.json(error('验证码错误或已过期', 400))
+    }
+
     const hashedPassword = await bcrypt.hash(newPassword, 10)
-    
+
     try {
-      await pool.query(
-        'UPDATE user SET password = ? WHERE id = ?',
-        [hashedPassword, stored.userId]
+      // 通过 account 查找用户 ID 进行密码更新
+      const [users] = await pool.query(
+        'SELECT id FROM user WHERE (phone = ? OR email = ?) AND is_deleted = 0',
+        [account, account],
       )
+      if (users.length > 0) {
+        await pool.query('UPDATE user SET password = ? WHERE id = ?', [
+          hashedPassword,
+          users[0].id,
+        ])
+      }
     } catch (dbErr) {
       console.log('数据库未连接，模拟密码更新成功')
-      const mockUser = Array.from(mockUsers.values()).find(u => u.id === stored.userId)
+      const mockUser = mockUsers.get(account)
       if (mockUser) mockUser.password = hashedPassword
     }
 
-    verificationCodes.delete(account)
+    await deleteVerificationCode(`${CODE_PREFIX_RESET}${account}`)
     res.json(success({ message: '密码重置成功' }))
   } catch (err) {
     console.error('重置密码失败:', err)
@@ -100,6 +108,7 @@ export const resetPassword = async (req, res) => {
   }
 }
 
+/** 开关双重认证 */
 export const enable2FA = async (req, res) => {
   const { userId, enable } = req.body
 
@@ -109,24 +118,27 @@ export const enable2FA = async (req, res) => {
 
   try {
     try {
-      await pool.query(
-        'UPDATE user SET two_factor_enabled = ? WHERE id = ?',
-        [enable ? 1 : 0, userId]
-      )
+      await pool.query('UPDATE user SET two_factor_enabled = ? WHERE id = ?', [
+        enable ? 1 : 0,
+        userId,
+      ])
     } catch (dbErr) {
       console.log('数据库未连接，模拟双重认证设置')
     }
 
-    res.json(success({
-      message: enable ? '双重认证已开启' : '双重认证已关闭',
-      enabled: enable
-    }))
+    res.json(
+      success({
+        message: enable ? '双重认证已开启' : '双重认证已关闭',
+        enabled: enable,
+      }),
+    )
   } catch (err) {
     console.error('设置双重认证失败:', err)
     res.json(error('设置失败', 500))
   }
 }
 
+/** 验证双重认证码 */
 export const verify2FA = async (req, res) => {
   const { userId, code } = req.body
 
@@ -134,20 +146,22 @@ export const verify2FA = async (req, res) => {
     return res.json(error('参数不完整', 400))
   }
 
-  const stored = verificationCodes.get(`2fa_${userId}`)
-  if (!stored || stored.code !== code) {
-    return res.json(error('验证码错误', 400))
-  }
+  try {
+    const storedCode = await getVerificationCode(`${CODE_PREFIX_2FA}${userId}`)
 
-  if (Date.now() > stored.expires) {
-    verificationCodes.delete(`2fa_${userId}`)
-    return res.json(error('验证码已过期', 400))
-  }
+    if (!storedCode || storedCode !== code) {
+      return res.json(error('验证码错误或已过期', 400))
+    }
 
-  verificationCodes.delete(`2fa_${userId}`)
-  res.json(success({ verified: true }))
+    await deleteVerificationCode(`${CODE_PREFIX_2FA}${userId}`)
+    res.json(success({ verified: true }))
+  } catch (err) {
+    console.error('验证双重认证失败:', err)
+    res.json(error('验证失败', 500))
+  }
 }
 
+/** 发送双重认证验证码 */
 export const send2FACode = async (req, res) => {
   const { userId } = req.body
 
@@ -157,11 +171,11 @@ export const send2FACode = async (req, res) => {
 
   try {
     let user = null
-    
+
     try {
       const [users] = await pool.query(
         'SELECT phone, email, two_factor_enabled FROM user WHERE id = ? AND is_deleted = 0',
-        [userId]
+        [userId],
       )
       if (users.length > 0) {
         user = users[0]
@@ -179,15 +193,11 @@ export const send2FACode = async (req, res) => {
       return res.json(error('未开启双重认证', 400))
     }
 
-    const code = Math.floor(100000 + Math.random() * 900000).toString()
-    const contact = user.phone || user.email
-    
-    verificationCodes.set(`2fa_${userId}`, {
-      code,
-      expires: Date.now() + 5 * 60 * 1000 // 5分钟有效
-    })
+    const code = generateCode()
+    await setVerificationCode(`${CODE_PREFIX_2FA}${userId}`, code, 300)
 
-    console.log(`双重认证码已发送至 ${contact}: ${code}`)
+    const contact = user.phone || user.email
+    console.log(`[验证码] 双重认证 → ${contact}: ${code}`)
 
     res.json(success({ message: '验证码已发送' }))
   } catch (err) {

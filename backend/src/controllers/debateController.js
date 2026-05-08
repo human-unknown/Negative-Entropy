@@ -93,7 +93,7 @@ export const getTopics = async (req, res) => {
 export const createTopic = async (req, res) => {
   const conn = await pool.getConnection()
   try {
-    const { title, description, category, pro_limit = 5, con_limit = 5, templateId } = req.body
+    const { title, description, category, pro_limit = 5, con_limit = 5, templateId, post_id } = req.body
     const userId = req.user.userId
 
     if (!title || !description || !category) {
@@ -116,8 +116,8 @@ export const createTopic = async (req, res) => {
 
     // 插入话题
     const [result] = await conn.query(
-      'INSERT INTO debate_topic (title, description, category, publisher_id, pro_limit, con_limit, audit_status, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [title, description, category, userId, pro_limit, con_limit, initialAuditStatus, DEBATE_STATUS.PENDING]
+      'INSERT INTO debate_topic (post_id, title, description, category, publisher_id, pro_limit, con_limit, audit_status, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [post_id || null, title, description, category, userId, pro_limit, con_limit, initialAuditStatus, DEBATE_STATUS.PENDING]
     )
 
     const topicId = result.insertId
@@ -528,7 +528,7 @@ export const settleTopic = async (req, res) => {
     await conn.beginTransaction()
 
     const [topic] = await conn.query(
-      'SELECT publisher_id, status FROM debate_topic WHERE id = ? FOR UPDATE',
+      'SELECT publisher_id, status, post_id FROM debate_topic WHERE id = ? FOR UPDATE',
       [topicId]
     )
     if (!topic.length) {
@@ -568,6 +568,15 @@ export const settleTopic = async (req, res) => {
       'INSERT INTO debate_result (topic_id, pro_votes, con_votes, winner, summary) VALUES (?, ?, ?, ?, ?)',
       [topicId, proVotes, conVotes, winner, summary]
     )
+
+    // 如果辩论关联了帖子，回写质量分
+    if (topic[0].post_id) {
+      const debateScore = Math.min(Math.max((proVotes + conVotes) / 10, 0), 10)
+      await conn.query(
+        'UPDATE post SET quality_score = COALESCE(quality_score, ?) WHERE id = ?',
+        [Math.round(debateScore * 100) / 100, topic[0].post_id]
+      )
+    }
 
     await conn.commit()
     res.json(success({ pro_votes: proVotes, con_votes: conVotes, winner, summary }, '结算完成'))

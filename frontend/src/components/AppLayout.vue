@@ -3,7 +3,7 @@
     <nav class="nav-bar">
       <div class="nav-left">
         <router-link
-          to="/debates"
+          to="/"
           class="logo"
         >
           逆熵
@@ -43,9 +43,10 @@ import UserDropdownMenu from '@/components/UserDropdownMenu.vue'
 const route = useRoute()
 
 const navTabs = [
-  { path: '/debates', label: '辩论列表' },
-  { path: '/rules', label: '规则辩论' },
-  { path: '/check/logic', label: '逻辑测试' }
+  { path: '/', label: '首页' },
+  { path: '/debates', label: '辩论' },
+  { path: '/rules', label: '规则' },
+  { path: '/check/logic', label: '考核' }
 ]
 
 const isActive = (path) => {

@@ -19,6 +19,9 @@ import notificationRoutes from './routes/notificationRoutes.js'
 import systemRoutes from './routes/systemRoutes.js'
 import templateRoutes from './routes/templateRoutes.js'
 import scoreRoutes from './routes/scoreRoutes.js'
+import channelRoutes from './routes/channelRoutes.js'
+import postRoutes from './routes/postRoutes.js'
+import commentRoutes, { commentActionRouter } from './routes/commentRoutes.js'
 
 const app = express()
 
@@ -103,6 +106,12 @@ app.use('/api/notification', notificationRoutes)
 app.use('/api/system', systemRoutes)
 app.use('/api/debate/templates', templateRoutes)
 app.use('/api/debate', scoreRoutes)
+
+// 社区功能（帖子 + 评论 + 频道）
+app.use('/api/channels', channelRoutes)
+app.use('/api/posts', postRoutes)
+app.use('/api/posts/:postId/comments', commentRoutes)
+app.use('/api/comments', commentActionRouter)
 
 // 错误处理
 app.use(errorHandler)

@@ -10,7 +10,11 @@ import {
   reviewTopic,
   getAIErrors,
   submitAIOptimization,
-  getStats
+  getStats,
+  getAdminPosts,
+  managePost,
+  getAdminComments,
+  manageComment
 } from '../controllers/adminController.js'
 import { getRules, saveRule } from '../controllers/ruleController.js'
 import { createRuleDebate } from '../controllers/ruleDebateController.js'
@@ -32,5 +36,11 @@ router.get('/rules', getRules)
 router.post('/rules', saveRule)
 router.post('/rule-debates', createRuleDebate)
 router.get('/stats', getStats)
+
+// 社区管理
+router.get('/posts', getAdminPosts)
+router.put('/posts/:postId', managePost)
+router.get('/comments', getAdminComments)
+router.delete('/comments/:commentId', manageComment)
 
 export default router

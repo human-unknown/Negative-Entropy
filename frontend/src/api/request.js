@@ -1,8 +1,9 @@
 import axios from 'axios'
 import { mockApi } from './mock'
 
-// Mock 模式：前端独立开发，无需后端
-const USE_MOCK = true
+// Mock 模式：通过环境变量 VITE_USE_MOCK 控制
+// 开发环境默认开启 Mock，生产环境关闭
+const USE_MOCK = import.meta.env.VITE_USE_MOCK !== 'false'
 
 // 从 URL 中提取相对路径
 const getRelativePath = (url) => {
@@ -28,6 +29,50 @@ const handleMockRequest = ({ method, url, data, params }) => {
   // ---- 认证 ----
   if (path.includes('/auth/register')) return mockApi.register(data)
   if (path.includes('/auth/login')) return mockApi.login(data)
+
+  // ---- 社区功能（频道 / 帖子 / 评论）----
+  if (path.includes('/channels') && method === 'get') return mockApi.getChannels()
+  if (path.includes('/posts') && path.includes('/comments') && method === 'get') {
+    const postId = path.match(/\/posts\/(\d+)\/comments/)[1]
+    return mockApi.getComments(postId, params)
+  }
+  if (path.includes('/posts') && path.includes('/comments') && method === 'post') {
+    const postId = path.match(/\/posts\/(\d+)\/comments/)[1]
+    return mockApi.createComment(postId, data)
+  }
+  if (path.includes('/comments') && path.includes('/upvote') && method === 'post') {
+    const commentId = path.match(/\/comments\/(\d+)/)[1]
+    return mockApi.upvoteComment(commentId)
+  }
+  if (path.includes('/comments') && method === 'delete') {
+    const commentId = path.match(/\/comments\/(\d+)/)[1]
+    return mockApi.deleteComment(commentId)
+  }
+  if (path.includes('/posts') && path.includes('/pin') && method === 'post') {
+    const postId = path.match(/\/posts\/(\d+)/)[1]
+    return mockApi.togglePin(postId)
+  }
+  if (path.includes('/posts') && path.includes('/debate') && method === 'post') {
+    const postId = path.match(/\/posts\/(\d+)/)[1]
+    return mockApi.startDebateFromPost(postId)
+  }
+  if (path.includes('/posts') && path.includes('/score') && method === 'post') {
+    const postId = path.match(/\/posts\/(\d+)/)[1]
+    return mockApi.scorePost(postId, data)
+  }
+  if (path.match(/\/posts\/\d+$/) && method === 'get') {
+    const postId = path.match(/\/posts\/(\d+)/)[1]
+    return mockApi.getPostDetail(postId)
+  }
+  if (path.match(/\/posts\/\d+$/) && method === 'put') {
+    const postId = path.match(/\/posts\/(\d+)/)[1]
+    return mockApi.updatePost(postId, data)
+  }
+  if (path.match(/\/posts\/\d+$/) && method === 'delete') {
+    return mockApi.deletePost()
+  }
+  if (path.includes('/posts') && method === 'get') return mockApi.getPosts(params)
+  if (path.includes('/posts') && method === 'post') return mockApi.createPost(data)
 
   // ---- 用户数据（必须在 /debate 之前，否则 /user/debates 被 /debate 误抢） ----
   if (path.includes('/user/debates')) return mockApi.getUserDebates(params)

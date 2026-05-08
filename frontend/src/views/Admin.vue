@@ -35,6 +35,7 @@
         <AdminRuleManagement v-else-if="activeMenu === 'rules'" />
         <AdminDataStats v-else-if="activeMenu === 'stats'" />
         <AdminAIOptimization v-else-if="activeMenu === 'ai'" />
+        <AdminCommunityManagement v-else-if="activeMenu === 'community'" />
       </div>
     </main>
   </div>
@@ -49,6 +50,7 @@ import AdminManualReview from '@/components/AdminManualReview.vue'
 import AdminRuleManagement from '@/components/AdminRuleManagement.vue'
 import AdminDataStats from '@/components/AdminDataStats.vue'
 import AdminAIOptimization from '@/components/AdminAIOptimization.vue'
+import AdminCommunityManagement from '@/components/AdminCommunityManagement.vue'
 
 const activeMenu = ref('users')
 
@@ -58,7 +60,8 @@ const menuItems = [
   { key: 'review', label: '人工复核', icon: '🔍' },
   { key: 'rules', label: '规则管理', icon: '⚖️' },
   { key: 'stats', label: '数据统计', icon: '📊' },
-  { key: 'ai', label: 'AI模型优化', icon: '🤖' }
+  { key: 'ai', label: 'AI模型优化', icon: '🤖' },
+  { key: 'community', label: '社区管理', icon: '🏘️' }
 ]
 
 const currentMenuLabel = computed(() => {

@@ -15,6 +15,7 @@
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
+    "@element-plus/icons-vue": "^2.3.2",
     "axios": "^1.6.0",
     "element-plus": "^2.6.0",
     "pinia": "^2.1.0",

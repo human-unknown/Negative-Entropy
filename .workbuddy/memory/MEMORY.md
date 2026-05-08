@@ -9,9 +9,12 @@ summary: "项目长时记忆"
 ### 技术栈
 - **前端**: Vue 3 (Composition API, `<script setup>`) + Vite 5 + Element Plus + Pinia + Axios
 - **后端**: Express.js 4 + MySQL 8.0 (mysql2, 原生 SQL) + JWT + bcryptjs + express-validator
+- **安全中间件**: helmet + express-rate-limit + CORS 白名单
+- **缓存**: Redis 7 (ioredis, 带内存降级)
+- **日志**: pino (生产 JSON/开发 pretty)
 - **语言**: 全栈 JavaScript (ES Modules)
-- **测试**: 前端 Vitest + 后端 node:test，4 个测试文件 16 个测试用例全部通过
-- **部署**: Docker Compose (MySQL + Backend + Frontend Nginx)
+- **测试**: 前端 Vitest (5 文件) + 后端 node:test (11 文件)，97 个测试用例全部通过 ✅
+- **部署**: Docker Compose (MySQL + Redis + Backend + Frontend Nginx)，多阶段构建 node:20-alpine
 
 ### 代码审查体系 (2026-05-03 创建)
 - **审查标准文档**: `CODE_REVIEW_STANDARDS.md` (v1.1)
@@ -22,9 +25,20 @@ summary: "项目长时记忆"
 - **Commit 规范**: Conventional Commits (`commitlint.config.cjs`)
 - **PR 模板**: `.github/PULL_REQUEST_TEMPLATE.md`
 - **根目录 package.json**: 整合 lint/format 脚本 + lint-staged 配置
-- **CI 工作流**: `.github/workflows/ci.yml` — PR 时自动 lint + build
-- **首次 PR 审查**: `PR_REVIEW_001_SpeechInput.md` — SpeechInput.vue 示范审查
-- **复盘记录**: `RETROSPECTIVE_001.md` — 改进 3 项标准、修复 2 个 Major 问题
+- **CI 工作流**: `.github/workflows/ci.yml` — PR 时自动 lint + test + build
+- **API 文档**: `API_REFERENCE.md` — 120+ 端点完整参考
+- **改进路线图**: `PROJECT_IMPROVEMENT_PLAN.md` — 安全/测试/架构/DevOps 19 项改进
+
+### Pinia Store 体系 (2026-05-08 创建)
+- `stores/user.js` — 认证状态、用户信息、login/logout/updateUser
+- `stores/debate.js` — 当前辩论缓存、发言列表
+- `stores/notification.js` — 未读计数、通知列表
+- Router 和 permission.js 已接入 userStore，替代 localStorage 直读
+
+### 数据库迁移机制 (2026-05-08 创建)
+- `sql/00_migration_tracker.sql` — migration_log 追踪表
+- `scripts/migrate.js` — 按编号顺序执行未运行的 SQL，支持 --dry-run
+- `npm run migrate` / `npm run migrate:dry`
 
 ### 深度审查 & 修复 (2026-05-03)
 - **严重**: 修复 debateController/ruleDebateController 中 30+ 条路径的连接重复释放 bug

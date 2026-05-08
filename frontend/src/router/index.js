@@ -7,6 +7,7 @@ const routes = [
     path: '/',
     name: 'Home',
     component: () => import('@/views/Home.vue'),
+    meta: { requiresLayout: true },
   },
   {
     path: '/register',
@@ -84,6 +85,25 @@ const routes = [
     component: () => import('@/views/RuleHistoryPage.vue'),
     meta: { requiresLayout: true },
   },
+  // ---- 社区功能 ----
+  {
+    path: '/c/:slug',
+    name: 'ChannelView',
+    component: () => import('@/views/ChannelView.vue'),
+    meta: { requiresLayout: true },
+  },
+  {
+    path: '/p/create',
+    name: 'PostCreate',
+    component: () => import('@/views/PostCreate.vue'),
+    meta: { requiresAuth: true, minLevel: USER_LEVEL.INTERMEDIATE, requiresLayout: true },
+  },
+  {
+    path: '/p/:postId',
+    name: 'PostDetail',
+    component: () => import('@/views/PostDetail.vue'),
+    meta: { requiresLayout: true },
+  },
 ]
 
 const router = createRouter({
@@ -116,7 +136,7 @@ router.beforeEach((to, _from, next) => {
       console.warn(
         `权限不足：需要等级 ${to.meta.minLevel}，当前等级 ${userStore.userLevel}`,
       )
-      return next('/debates')
+      return next('/')
     }
   }
 

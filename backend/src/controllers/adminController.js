@@ -402,6 +402,11 @@ export const getStats = async (req, res) => {
     const [pendingTopics] = await pool.query('SELECT COUNT(*) as count FROM debate_topic WHERE audit_status = 0')
     const [pendingReviews] = await pool.query('SELECT COUNT(*) as count FROM content_review_queue WHERE status = "pending"')
     const [pendingReports] = await pool.query('SELECT COUNT(*) as count FROM report WHERE status = 0')
+    // 社区统计
+    const [postCount] = await pool.query('SELECT COUNT(*) as count FROM post WHERE status != 2')
+    const [commentCount] = await pool.query('SELECT COUNT(*) as count FROM comment WHERE is_deleted = 0')
+    const [channelCount] = await pool.query('SELECT COUNT(*) as count FROM channel')
+    const [pendingPosts] = await pool.query('SELECT COUNT(*) as count FROM post WHERE audit_status = 0')
 
     res.json(success({
       activeUsers: activeUsers[0].count,
@@ -411,10 +416,129 @@ export const getStats = async (req, res) => {
       violations: violationCount[0].count,
       pendingTopics: pendingTopics[0].count,
       pendingReviews: pendingReviews[0].count,
-      pendingReports: pendingReports[0].count
+      pendingReports: pendingReports[0].count,
+      posts: postCount[0].count,
+      comments: commentCount[0].count,
+      channels: channelCount[0].count,
+      pendingPosts: pendingPosts[0].count
     }))
   } catch (err) {
     console.error('获取统计数据失败:', err)
     res.json(error('获取统计数据失败', 500))
+  }
+}
+
+// ======== 社区管理 ========
+
+/**
+ * GET /api/admin/posts — 管理帖子列表
+ */
+export const getAdminPosts = async (req, res) => {
+  try {
+    const { page = 1, limit = 20, status, keyword } = req.query
+    const offset = (parseInt(page) - 1) * parseInt(limit)
+    const conditions = ['1=1']
+    const params = []
+
+    if (status !== undefined) {
+      conditions.push('p.status = ?')
+      params.push(parseInt(status))
+    }
+    if (keyword) {
+      conditions.push('(p.title LIKE ? OR p.content LIKE ?)')
+      params.push(`%${keyword}%`, `%${keyword}%`)
+    }
+
+    const [rows] = await pool.query(
+      `SELECT p.*, u.name AS author_name, c.name AS channel_name
+       FROM post p JOIN user u ON p.author_id = u.id
+       JOIN channel c ON p.channel_id = c.id
+       WHERE ${conditions.join(' AND ')}
+       ORDER BY p.created_at DESC LIMIT ? OFFSET ?`,
+      [...params, parseInt(limit), offset]
+    )
+    const [count] = await pool.query(
+      `SELECT COUNT(*) AS total FROM post p WHERE ${conditions.join(' AND ')}`, params
+    )
+
+    res.json(success({ list: rows, total: count[0].total, page: parseInt(page), limit: parseInt(limit) }))
+  } catch (err) {
+    console.error('获取管理帖子列表失败:', err)
+    res.json(error('获取失败', 500))
+  }
+}
+
+/**
+ * PUT /api/admin/posts/:postId — 管理操作（审核/删除/恢复）
+ */
+export const managePost = async (req, res) => {
+  try {
+    const { postId } = req.params
+    const { action } = req.body
+
+    if (action === 'approve') {
+      await pool.query('UPDATE post SET audit_status = 1 WHERE id = ?', [postId])
+    } else if (action === 'reject') {
+      await pool.query('UPDATE post SET audit_status = 2 WHERE id = ?', [postId])
+    } else if (action === 'delete') {
+      await pool.query('UPDATE post SET status = 2 WHERE id = ?', [postId])
+    } else if (action === 'restore') {
+      await pool.query('UPDATE post SET status = 0, audit_status = 1 WHERE id = ?', [postId])
+    } else {
+      return res.status(400).json(error('无效操作', 400))
+    }
+
+    res.json(success(null, '操作成功'))
+  } catch (err) {
+    console.error('管理帖子操作失败:', err)
+    res.json(error('操作失败', 500))
+  }
+}
+
+/**
+ * GET /api/admin/comments — 管理评论列表
+ */
+export const getAdminComments = async (req, res) => {
+  try {
+    const { page = 1, limit = 20, keyword } = req.query
+    const offset = (parseInt(page) - 1) * parseInt(limit)
+    const conditions = ['1=1']
+    const params = []
+
+    if (keyword) {
+      conditions.push('c.content LIKE ?')
+      params.push(`%${keyword}%`)
+    }
+
+    const [rows] = await pool.query(
+      `SELECT c.*, u.name AS author_name, p.title AS post_title
+       FROM comment c JOIN user u ON c.author_id = u.id
+       JOIN post p ON c.post_id = p.id
+       WHERE ${conditions.join(' AND ')}
+       ORDER BY c.created_at DESC LIMIT ? OFFSET ?`,
+      [...params, parseInt(limit), offset]
+    )
+    const [count] = await pool.query(
+      `SELECT COUNT(*) AS total FROM comment c WHERE ${conditions.join(' AND ')}`, params
+    )
+
+    res.json(success({ list: rows, total: count[0].total, page: parseInt(page), limit: parseInt(limit) }))
+  } catch (err) {
+    console.error('获取管理评论列表失败:', err)
+    res.json(error('获取失败', 500))
+  }
+}
+
+/**
+ * DELETE /api/admin/comments/:commentId — 删除评论
+ */
+export const manageComment = async (req, res) => {
+  try {
+    const { commentId } = req.params
+    await pool.query('UPDATE comment SET is_deleted = 1 WHERE id = ?', [commentId])
+    res.json(success(null, '已删除'))
+  } catch (err) {
+    console.error('删除评论失败:', err)
+    res.json(error('操作失败', 500))
   }
 }

@@ -542,3 +542,247 @@ export const manageComment = async (req, res) => {
     res.json(error('操作失败', 500))
   }
 }
+
+// ═══════════ AI审核管理 ═══════════
+
+/**
+ * GET /api/admin/ai/config — 获取AI审核配置
+ */
+export const getAIConfig = async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      'SELECT config_key, config_value, description FROM ai_audit_config ORDER BY id'
+    )
+    const config = {}
+    for (const r of rows) {
+      config[r.config_key] = r.config_value
+    }
+    res.json(success(config))
+  } catch (err) {
+    console.error('获取AI配置失败:', err)
+    res.json(error('获取失败', 500))
+  }
+}
+
+/**
+ * PUT /api/admin/ai/config — 更新AI审核配置
+ */
+export const updateAIConfig = async (req, res) => {
+  try {
+    const updates = req.body
+    if (!updates || typeof updates !== 'object' || Object.keys(updates).length === 0) {
+      return res.json(error('配置数据不能为空', 400))
+    }
+
+    for (const [key, value] of Object.entries(updates)) {
+      await pool.query(
+        'UPDATE ai_audit_config SET config_value = ? WHERE config_key = ?',
+        [String(value), key]
+      )
+    }
+
+    res.json(success({ message: '配置已更新' }))
+  } catch (err) {
+    console.error('更新AI配置失败:', err)
+    res.json(error('更新失败', 500))
+  }
+}
+
+/**
+ * GET /api/admin/ai/stats — AI审核统计
+ */
+export const getAIStats = async (req, res) => {
+  try {
+    const { days = 7 } = req.query
+
+    const [[totalRow]] = await pool.query(
+      `SELECT COUNT(*) as total FROM ai_audit_log WHERE created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)`,
+      [parseInt(days)]
+    )
+
+    const [verdictRows] = await pool.query(
+      `SELECT verdict, COUNT(*) as count FROM ai_audit_log
+       WHERE created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
+       GROUP BY verdict`,
+      [parseInt(days)]
+    )
+
+    const [avgRow] = await pool.query(
+      `SELECT AVG(elapsed_ms) as avg_ms, SUM(prompt_tokens) as total_prompt_tokens,
+              SUM(completion_tokens) as total_completion_tokens
+       FROM ai_audit_log WHERE created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)`,
+      [parseInt(days)]
+    )
+
+    const verdicts = {}
+    for (const r of verdictRows) {
+      verdicts[r.verdict] = r.count
+    }
+
+    res.json(success({
+      total: totalRow.total || 0,
+      pass: verdicts.pass || 0,
+      manual_review: verdicts.manual_review || 0,
+      reject: verdicts.reject || 0,
+      avgElapsedMs: Math.round(avgRow.avg_ms || 0),
+      totalPromptTokens: avgRow.total_prompt_tokens || 0,
+      totalCompletionTokens: avgRow.total_completion_tokens || 0,
+    }))
+  } catch (err) {
+    console.error('获取AI统计失败:', err)
+    res.json(error('获取失败', 500))
+  }
+}
+
+/**
+ * GET /api/admin/ai/logs — AI审核日志
+ */
+export const getAILogs = async (req, res) => {
+  try {
+    const { page = 1, limit = 20, verdict, content_type } = req.query
+    const offset = (page - 1) * limit
+
+    let where = '1=1'
+    const params = []
+
+    if (verdict) {
+      where += ' AND verdict = ?'
+      params.push(verdict)
+    }
+    if (content_type) {
+      where += ' AND content_type = ?'
+      params.push(content_type)
+    }
+
+    const [[{ total }]] = await pool.query(
+      `SELECT COUNT(*) as total FROM ai_audit_log WHERE ${where}`,
+      params
+    )
+
+    const [rows] = await pool.query(
+      `SELECT id, content_type, verdict, reason, confidence, categories,
+              model, elapsed_ms, prompt_tokens, completion_tokens, created_at
+       FROM ai_audit_log WHERE ${where}
+       ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+      [...params, parseInt(limit), offset]
+    )
+
+    res.json(success({
+      list: rows,
+      total,
+      page: parseInt(page),
+      limit: parseInt(limit),
+    }))
+  } catch (err) {
+    console.error('获取AI日志失败:', err)
+    res.json(error('获取失败', 500))
+  }
+}
+
+// ═══════════ 敏感词管理 ═══════════
+
+/**
+ * GET /api/admin/sensitive-words — 敏感词列表
+ */
+export const getSensitiveWords = async (req, res) => {
+  try {
+    const { level, category, page = 1, limit = 50 } = req.query
+    const offset = (page - 1) * limit
+
+    let where = '1=1'
+    const params = []
+
+    if (level) { where += ' AND level = ?'; params.push(level) }
+    if (category) { where += ' AND category = ?'; params.push(category) }
+
+    const [[{ total }]] = await pool.query(
+      `SELECT COUNT(*) as total FROM sensitive_words WHERE ${where}`,
+      params
+    )
+
+    const [rows] = await pool.query(
+      `SELECT id, word, level, category, is_active, created_at, updated_at
+       FROM sensitive_words WHERE ${where}
+       ORDER BY id DESC LIMIT ? OFFSET ?`,
+      [...params, parseInt(limit), offset]
+    )
+
+    res.json(success({ list: rows, total, page: parseInt(page), limit: parseInt(limit) }))
+  } catch (err) {
+    console.error('获取敏感词列表失败:', err)
+    res.json(error('获取失败', 500))
+  }
+}
+
+/**
+ * POST /api/admin/sensitive-words — 添加敏感词
+ */
+export const addSensitiveWord = async (req, res) => {
+  try {
+    const { word, level = 'blocked', category } = req.body
+    if (!word || !word.trim()) {
+      return res.json(error('敏感词不能为空', 400))
+    }
+    if (!['blocked', 'suspicious'].includes(level)) {
+      return res.json(error('级别无效', 400))
+    }
+
+    await pool.query(
+      'INSERT INTO sensitive_words (word, level, category) VALUES (?, ?, ?)',
+      [word.trim(), level, category || null]
+    )
+    res.json(success({ message: '已添加' }))
+  } catch (err) {
+    if (err.code === 'ER_DUP_ENTRY') {
+      return res.json(error('该敏感词已存在', 400))
+    }
+    console.error('添加敏感词失败:', err)
+    res.json(error('添加失败', 500))
+  }
+}
+
+/**
+ * PUT /api/admin/sensitive-words/:id — 更新敏感词
+ */
+export const updateSensitiveWord = async (req, res) => {
+  try {
+    const { id } = req.params
+    const { word, level, category, is_active } = req.body
+
+    const updates = []
+    const params = []
+
+    if (word !== undefined) { updates.push('word = ?'); params.push(word.trim()) }
+    if (level !== undefined) { updates.push('level = ?'); params.push(level) }
+    if (category !== undefined) { updates.push('category = ?'); params.push(category) }
+    if (is_active !== undefined) { updates.push('is_active = ?'); params.push(is_active) }
+
+    if (updates.length === 0) {
+      return res.json(error('无更新内容', 400))
+    }
+
+    params.push(id)
+    await pool.query(
+      `UPDATE sensitive_words SET ${updates.join(', ')} WHERE id = ?`,
+      params
+    )
+    res.json(success({ message: '已更新' }))
+  } catch (err) {
+    console.error('更新敏感词失败:', err)
+    res.json(error('更新失败', 500))
+  }
+}
+
+/**
+ * DELETE /api/admin/sensitive-words/:id — 删除敏感词
+ */
+export const deleteSensitiveWord = async (req, res) => {
+  try {
+    const { id } = req.params
+    await pool.query('DELETE FROM sensitive_words WHERE id = ?', [id])
+    res.json(success({ message: '已删除' }))
+  } catch (err) {
+    console.error('删除敏感词失败:', err)
+    res.json(error('删除失败', 500))
+  }
+}

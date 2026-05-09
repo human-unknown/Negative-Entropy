@@ -1,7 +1,7 @@
 -- 审核日志表
 CREATE TABLE IF NOT EXISTS audit_log (
   id INT PRIMARY KEY AUTO_INCREMENT,
-  user_id INT NOT NULL COMMENT '被审核用户ID',
+  user_id BIGINT UNSIGNED NOT NULL COMMENT '被审核用户ID',
   content TEXT NOT NULL COMMENT '被审核内容',
   content_type ENUM('speech', 'topic', 'username') NOT NULL COMMENT '内容类型',
   content_id INT COMMENT '关联内容ID',
@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS audit_log (
   audit_result ENUM('pass', 'reject', 'manual_review') NOT NULL COMMENT '审核结果',
   violations JSON COMMENT '违规类型',
   reason TEXT COMMENT '审核原因',
-  reviewer_id INT COMMENT '人工审核员ID',
+  reviewer_id BIGINT UNSIGNED COMMENT '人工审核员ID',
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '审核时间',
   INDEX idx_user_id (user_id),
   INDEX idx_audit_type (audit_type),

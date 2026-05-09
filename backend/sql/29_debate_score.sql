@@ -1,7 +1,7 @@
 CREATE TABLE `debate_score` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '评分ID',
-  `topic_id` INT UNSIGNED NOT NULL COMMENT '关联辩论话题',
-  `voter_id` INT UNSIGNED NOT NULL COMMENT '评分者ID',
+  `topic_id` BIGINT UNSIGNED NOT NULL COMMENT '关联辩论话题',
+  `voter_id` BIGINT UNSIGNED NOT NULL COMMENT '评分者ID',
   `target_stance` TINYINT NOT NULL COMMENT '评分对象：1=正方, 0=反方',
   `criterion_key` VARCHAR(50) NOT NULL COMMENT '评分项标识（对应模板 scoring.criteria[].key）',
   `score` TINYINT UNSIGNED NOT NULL COMMENT '得分（1-10）',

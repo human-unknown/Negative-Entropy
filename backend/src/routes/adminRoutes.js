@@ -14,7 +14,15 @@ import {
   getAdminPosts,
   managePost,
   getAdminComments,
-  manageComment
+  manageComment,
+  getAIConfig,
+  updateAIConfig,
+  getAIStats,
+  getAILogs,
+  getSensitiveWords,
+  addSensitiveWord,
+  updateSensitiveWord,
+  deleteSensitiveWord
 } from '../controllers/adminController.js'
 import { getRules, saveRule } from '../controllers/ruleController.js'
 import { createRuleDebate } from '../controllers/ruleDebateController.js'
@@ -42,5 +50,17 @@ router.get('/posts', getAdminPosts)
 router.put('/posts/:postId', managePost)
 router.get('/comments', getAdminComments)
 router.delete('/comments/:commentId', manageComment)
+
+// AI审核管理
+router.get('/ai/config', getAIConfig)
+router.put('/ai/config', updateAIConfig)
+router.get('/ai/stats', getAIStats)
+router.get('/ai/logs', getAILogs)
+
+// 敏感词管理
+router.get('/sensitive-words', getSensitiveWords)
+router.post('/sensitive-words', addSensitiveWord)
+router.put('/sensitive-words/:id', updateSensitiveWord)
+router.delete('/sensitive-words/:id', deleteSensitiveWord)
 
 export default router

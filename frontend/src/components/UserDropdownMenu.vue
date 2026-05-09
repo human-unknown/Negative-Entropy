@@ -23,48 +23,61 @@
       </svg>
     </button>
 
-    <Teleport to="body">
-      <div
-        v-if="showMenu"
-        class="dropdown-menu"
-        :style="menuStyle"
-      >
-        <div class="menu-header">
-          <div class="menu-user-avatar">
-            {{ userName.charAt(0) }}
+    <div
+      v-if="showMenu"
+      class="dropdown-menu"
+    >
+      <div class="menu-header">
+        <div class="menu-user-avatar">
+          {{ userName.charAt(0) }}
+        </div>
+        <div class="menu-user-info">
+          <div class="menu-user-name">
+            {{ userName }}
           </div>
-          <div class="menu-user-info">
-            <div class="menu-user-name">
-              {{ userName }}
-            </div>
-            <div class="menu-user-level">
-              Lv.{{ userLevel }} {{ levelText }}
-            </div>
+          <div class="menu-user-level">
+            Lv.{{ userLevel }} {{ levelText }}
           </div>
         </div>
+      </div>
         <div class="menu-divider" />
-        <div
-          class="menu-item"
-          @click="handleNavigate('/profile')"
-        >
-          <span class="menu-item-icon">&#x2766;</span>
-          <span>个人中心</span>
-        </div>
-        <div
-          class="menu-item"
-          @click="handleNavigate('/profile', 'security')"
-        >
-          <span class="menu-item-icon">&#x1F512;</span>
-          <span>账号安全</span>
-        </div>
-        <div
-          class="menu-item"
-          @click="handleNavigate('/profile')"
-        >
-          <span class="menu-item-icon">&#x1F514;</span>
-          <span>通知中心</span>
-        </div>
-        <div class="menu-divider" />
+        <!-- 未登录 -->
+        <template v-if="!userStore.isLoggedIn">
+          <div class="menu-item" @click="handleNavigate('/login')">
+            <span class="menu-item-icon">&#x1F511;</span>
+            <span>登录</span>
+          </div>
+          <div class="menu-item" @click="handleNavigate('/register')">
+            <span class="menu-item-icon">&#x1F4DD;</span>
+            <span>注册账号</span>
+          </div>
+          <div class="menu-divider" />
+        </template>
+        <!-- 已登录 -->
+        <template v-else>
+          <div
+            class="menu-item"
+            @click="handleNavigate('/profile')"
+          >
+            <span class="menu-item-icon">&#x2766;</span>
+            <span>个人中心</span>
+          </div>
+          <div
+            class="menu-item"
+            @click="handleNavigate('/profile', 'security')"
+          >
+            <span class="menu-item-icon">&#x1F512;</span>
+            <span>账号安全</span>
+          </div>
+          <div
+            class="menu-item"
+            @click="handleNavigate('/profile')"
+          >
+            <span class="menu-item-icon">&#x1F514;</span>
+            <span>通知中心</span>
+          </div>
+          <div class="menu-divider" />
+        </template>
         <div
           class="menu-item"
           @click="handleFeedback"
@@ -74,6 +87,7 @@
         </div>
         <div class="menu-divider" />
         <div
+          v-if="userStore.isLoggedIn"
           class="menu-item menu-item-danger"
           @click="handleLogout"
         >
@@ -81,7 +95,6 @@
           <span>退出登录</span>
         </div>
       </div>
-    </Teleport>
 
     <!-- 反馈弹窗 -->
     <div
@@ -99,29 +112,19 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useUserStore } from '@/stores/user'
 import { USER_LEVEL_TEXT } from '@/constants/userLevel'
 import FeedbackForm from '@/components/FeedbackForm.vue'
 
 const router = useRouter()
+const userStore = useUserStore()
 const menuRef = ref(null)
 const showMenu = ref(false)
 const showFeedback = ref(false)
 
-const userStr = localStorage.getItem('user')
-const user = userStr ? JSON.parse(userStr) : {}
-const userName = ref(user.name || '用户')
-const userLevel = ref(user.level || 1)
+const userName = computed(() => userStore.userName || '用户')
+const userLevel = computed(() => userStore.userLevel || 1)
 const levelText = computed(() => USER_LEVEL_TEXT[userLevel.value] || '')
-
-const menuStyle = computed(() => {
-  if (!menuRef.value) return {}
-  const rect = menuRef.value.getBoundingClientRect()
-  return {
-    position: 'fixed',
-    top: `${rect.bottom + 4}px`,
-    right: `${document.documentElement.clientWidth - rect.right}px`
-  }
-})
 
 const toggleMenu = () => { showMenu.value = !showMenu.value }
 
@@ -140,18 +143,14 @@ const handleFeedback = () => {
 }
 
 const handleLogout = () => {
-  localStorage.removeItem('token')
-  localStorage.removeItem('user')
+  userStore.logout()
   showMenu.value = false
   router.push('/')
 }
 
 const handleClickOutside = (event) => {
   if (menuRef.value && !menuRef.value.contains(event.target)) {
-    const dropdown = document.querySelector('.dropdown-menu')
-    if (dropdown && !dropdown.contains(event.target)) {
-      showMenu.value = false
-    }
+    showMenu.value = false
   }
 }
 
@@ -216,6 +215,10 @@ onUnmounted(() => { document.removeEventListener('click', handleClickOutside) })
 
 <style>
 .dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
   width: 240px;
   background: #fff;
   border: 1px solid #e8e8e8;

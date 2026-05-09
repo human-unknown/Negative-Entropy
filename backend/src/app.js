@@ -22,13 +22,31 @@ import scoreRoutes from './routes/scoreRoutes.js'
 import channelRoutes from './routes/channelRoutes.js'
 import postRoutes from './routes/postRoutes.js'
 import commentRoutes, { commentActionRouter } from './routes/commentRoutes.js'
+import { aiAuditService } from './services/aiAuditService.js'
 
 const app = express()
 
+// 初始化 AI 审核服务
+aiAuditService.init()
+
 // ---- 安全中间件 ----
 
-// 安全响应头 (CSP, X-Frame-Options, X-Content-Type-Options 等)
-app.use(helmet())
+// 安全响应头 — CSP 允许 Vue 生产构建的内联脚本
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+        scriptSrcAttr: ["'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:", "https:"],
+        fontSrc: ["'self'", "data:"],
+        connectSrc: ["'self'", "ws:", "wss:"],
+      },
+    },
+  }),
+)
 
 // CORS — 生产环境白名单，开发环境宽松
 const corsOrigin =
@@ -45,10 +63,12 @@ app.use(
 
 // ---- 速率限制 ----
 
-// 全局限流：每个 IP 15 分钟内最多 100 次请求
+const isProduction = process.env.NODE_ENV === 'production'
+
+// 全局限流：开发环境宽松，生产环境严格
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: isProduction ? 100 : 10000,
   standardHeaders: true,
   legacyHeaders: false,
   message: { code: 429, message: '请求过于频繁，请稍后再试' },
@@ -57,7 +77,7 @@ const globalLimiter = rateLimit({
 // 敏感端点限流：15 分钟内最多 10 次（登录/注册/验证码等）
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: isProduction ? 10 : 1000,
   standardHeaders: true,
   legacyHeaders: false,
   message: { code: 429, message: '操作过于频繁，请15分钟后再试' },
@@ -112,6 +132,16 @@ app.use('/api/channels', channelRoutes)
 app.use('/api/posts', postRoutes)
 app.use('/api/posts/:postId/comments', commentRoutes)
 app.use('/api/comments', commentActionRouter)
+
+// ---- 开发环境：托管前端静态文件 ----
+import path from 'path'
+import { fileURLToPath } from 'url'
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const distPath = path.resolve(__dirname, '../../frontend/dist')
+app.use(express.static(distPath))
+app.get(/^(?!\/api\/).*/, (req, res) => {
+  res.sendFile(path.join(distPath, 'index.html'))
+})
 
 // 错误处理
 app.use(errorHandler)

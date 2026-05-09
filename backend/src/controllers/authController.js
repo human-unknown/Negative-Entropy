@@ -14,7 +14,7 @@ export const login = async (req, res) => {
 
   try {
     const [users] = await pool.query(
-      'SELECT id, account, password, name, phone, email, level, exp, status, created_at, two_factor_enabled FROM user WHERE (account = ? OR phone = ? OR email = ?) AND is_deleted = 0',
+      'SELECT id, account, password, name, phone, email, level, status, created_at, two_factor_enabled FROM user WHERE (account = ? OR phone = ? OR email = ?) AND is_deleted = 0',
       [account, account, account]
     )
 
@@ -49,7 +49,6 @@ export const login = async (req, res) => {
         phone: user.phone,
         email: user.email,
         level: user.level,
-        exp: user.exp,
         created_at: user.created_at,
         two_factor_enabled: !!user.two_factor_enabled
       }

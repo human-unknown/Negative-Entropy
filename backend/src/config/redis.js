@@ -5,13 +5,16 @@ const redis = new Redis({
   port: parseInt(process.env.REDIS_PORT, 10) || 6379,
   password: process.env.REDIS_PASSWORD || undefined,
   retryStrategy(times) {
-    if (times > 10) {
-      console.warn('Redis 连接失败，已重试 10 次，放弃重连')
-      return null
-    }
+    if (times > 10) return null
     return Math.min(times * 200, 3000)
   },
   lazyConnect: true,
+})
+
+// 捕获错误事件，防止 unhandled rejection 导致进程崩溃
+redis.on('error', (err) => {
+  if (err.code === 'ECONNREFUSED') return // 静默，预期内
+  console.warn('Redis 错误:', err.message)
 })
 
 // 异步连接，不阻塞启动

@@ -55,7 +55,7 @@ export const getPosts = async (req, res) => {
     const whereClause = conditions.join(' AND ')
 
     const sortMap = {
-      quality: 'p.quality_score DESC NULLS LAST, p.created_at DESC',
+      quality: 'p.quality_score DESC, p.created_at DESC',
       newest: 'p.created_at DESC',
       hot: '(p.comment_count * 2 + p.view_count * 0.1) DESC, p.created_at DESC'
     }

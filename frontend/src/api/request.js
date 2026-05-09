@@ -171,7 +171,13 @@ if (USE_MOCK) {
       if (status === 401) {
         localStorage.removeItem('token')
         localStorage.removeItem('user')
-        window.location.href = '/'
+        // 使用 Vue Router 跳转而非全页刷新
+        import('@/stores/user').then(({ useUserStore }) => {
+          useUserStore().logout()
+        })
+        if (window.location.hash !== '#/' && window.location.hash !== '#') {
+          window.location.hash = '#/'
+        }
         return Promise.reject(error)
       }
       if (status === 403) {

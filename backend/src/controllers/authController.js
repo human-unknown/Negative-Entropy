@@ -15,7 +15,7 @@ export const login = async (req, res) => {
   try {
     const [users] = await pool.query(
       'SELECT id, account, password, name, phone, email, level, status, created_at, two_factor_enabled FROM user WHERE (account = ? OR phone = ? OR email = ?) AND is_deleted = 0',
-      [account, account, account]
+      [account, account, account],
     )
 
     if (!users.length) {
@@ -35,24 +35,27 @@ export const login = async (req, res) => {
       }
     }
 
-    const token = jwt.sign(
-      { userId: user.id, id: user.id, level: user.level },
-      config.jwt.secret,
-      { expiresIn: config.jwt.expiresIn }
-    )
+    const token = jwt.sign({ userId: user.id, id: user.id, level: user.level }, config.jwt.secret, {
+      expiresIn: config.jwt.expiresIn,
+    })
 
-    res.json(success({
-      token,
-      user: {
-        id: user.id,
-        name: user.name,
-        phone: user.phone,
-        email: user.email,
-        level: user.level,
-        created_at: user.created_at,
-        two_factor_enabled: !!user.two_factor_enabled
-      }
-    }, '登录成功'))
+    res.json(
+      success(
+        {
+          token,
+          user: {
+            id: user.id,
+            name: user.name,
+            phone: user.phone,
+            email: user.email,
+            level: user.level,
+            created_at: user.created_at,
+            two_factor_enabled: !!user.two_factor_enabled,
+          },
+        },
+        '登录成功',
+      ),
+    )
   } catch (err) {
     console.error('登录失败:', err)
     res.json(error('登录失败', 500))
@@ -71,7 +74,7 @@ export const register = async (req, res) => {
     // 检查账号是否已存在
     const [existing] = await pool.query(
       'SELECT id FROM user WHERE account = ? AND is_deleted = 0',
-      [account]
+      [account],
     )
     if (existing.length > 0) {
       return res.json(error('账号已存在', 400))
@@ -81,7 +84,7 @@ export const register = async (req, res) => {
     if (phone) {
       const [phoneExists] = await pool.query(
         'SELECT id FROM user WHERE phone = ? AND is_deleted = 0',
-        [phone]
+        [phone],
       )
       if (phoneExists.length > 0) {
         return res.json(error('手机号已被使用', 400))
@@ -90,7 +93,7 @@ export const register = async (req, res) => {
     if (email) {
       const [emailExists] = await pool.query(
         'SELECT id FROM user WHERE email = ? AND is_deleted = 0',
-        [email]
+        [email],
       )
       if (emailExists.length > 0) {
         return res.json(error('邮箱已被使用', 400))
@@ -103,7 +106,7 @@ export const register = async (req, res) => {
     // 插入用户
     const [result] = await pool.query(
       'INSERT INTO user (account, password, name, phone, email) VALUES (?, ?, ?, ?, ?)',
-      [account, hashedPassword, name, phone || null, email || null]
+      [account, hashedPassword, name, phone || null, email || null],
     )
 
     res.json(success({ userId: result.insertId }, '注册成功'))

@@ -9,15 +9,15 @@ const VOTE_WEIGHT_MAP = {
   [USER_LEVEL.BEGINNER]: 1.0,
   [USER_LEVEL.INTERMEDIATE]: 1.0,
   [USER_LEVEL.ADVANCED]: 1.5,
-  [USER_LEVEL.ADMIN]: 2.0
+  [USER_LEVEL.ADMIN]: 2.0,
 }
 
 export const getCategories = async (req, res) => {
   try {
     const [rows] = await pool.query(
-      'SELECT DISTINCT category FROM debate_topic WHERE audit_status = 1 ORDER BY category'
+      'SELECT DISTINCT category FROM debate_topic WHERE audit_status = 1 ORDER BY category',
     )
-    res.json(success(rows.map(r => r.category)))
+    res.json(success(rows.map((r) => r.category)))
   } catch (err) {
     console.error('获取分类失败:', err)
     res.json(error('获取分类失败', 500))
@@ -26,14 +26,7 @@ export const getCategories = async (req, res) => {
 
 export const getTopics = async (req, res) => {
   try {
-    const {
-      page = 1,
-      pageSize = 10,
-      category,
-      status,
-      keyword,
-      sort = 'time'
-    } = req.query
+    const { page = 1, pageSize = 10, category, status, keyword, sort = 'time' } = req.query
 
     const offset = (page - 1) * pageSize
     const conditions = ['audit_status = 1']
@@ -53,11 +46,11 @@ export const getTopics = async (req, res) => {
     }
 
     const whereClause = conditions.join(' AND ')
-    
+
     const sortMap = {
       time: 'dt.created_at DESC',
       heat: 'heat DESC',
-      participants: 'participant_count DESC'
+      participants: 'participant_count DESC',
     }
     const orderBy = sortMap[sort] || sortMap.time
 
@@ -70,20 +63,22 @@ export const getTopics = async (req, res) => {
        WHERE ${whereClause}
        ORDER BY ${orderBy}
        LIMIT ? OFFSET ?`,
-      [...params, parseInt(pageSize), offset]
+      [...params, parseInt(pageSize), offset],
     )
 
     const [countResult] = await pool.query(
       `SELECT COUNT(*) as total FROM debate_topic WHERE ${whereClause}`,
-      params
+      params,
     )
 
-    res.json(success({
-      list: rows,
-      total: countResult[0].total,
-      page: parseInt(page),
-      pageSize: parseInt(pageSize)
-    }))
+    res.json(
+      success({
+        list: rows,
+        total: countResult[0].total,
+        page: parseInt(page),
+        pageSize: parseInt(pageSize),
+      }),
+    )
   } catch (err) {
     console.error('获取话题列表失败:', err)
     res.json(error('获取话题列表失败', 500))
@@ -93,7 +88,15 @@ export const getTopics = async (req, res) => {
 export const createTopic = async (req, res) => {
   const conn = await pool.getConnection()
   try {
-    const { title, description, category, pro_limit = 5, con_limit = 5, templateId, post_id } = req.body
+    const {
+      title,
+      description,
+      category,
+      pro_limit = 5,
+      con_limit = 5,
+      templateId,
+      post_id,
+    } = req.body
     const userId = req.user.userId
 
     if (!title || !description || !category) {
@@ -117,7 +120,17 @@ export const createTopic = async (req, res) => {
     // 插入话题
     const [result] = await conn.query(
       'INSERT INTO debate_topic (post_id, title, description, category, publisher_id, pro_limit, con_limit, audit_status, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [post_id || null, title, description, category, userId, pro_limit, con_limit, initialAuditStatus, DEBATE_STATUS.PENDING]
+      [
+        post_id || null,
+        title,
+        description,
+        category,
+        userId,
+        pro_limit,
+        con_limit,
+        initialAuditStatus,
+        DEBATE_STATUS.PENDING,
+      ],
     )
 
     const topicId = result.insertId
@@ -126,7 +139,7 @@ export const createTopic = async (req, res) => {
     if (templateId) {
       const [templates] = await conn.query(
         'SELECT id, type FROM debate_template WHERE id = ? AND is_active = 1',
-        [templateId]
+        [templateId],
       )
       if (!templates.length) {
         await conn.rollback()
@@ -135,7 +148,7 @@ export const createTopic = async (req, res) => {
       // 模板辩论默认正反各1人
       await conn.query(
         'UPDATE debate_topic SET template_id = ?, pro_limit = 1, con_limit = 1 WHERE id = ?',
-        [templateId, topicId]
+        [templateId, topicId],
       )
     }
 
@@ -173,14 +186,14 @@ export const auditTopic = async (req, res) => {
 
     await conn.beginTransaction()
 
-    await conn.query(
-      'UPDATE debate_topic SET audit_status = ? WHERE id = ?',
-      [audit_status, topicId]
-    )
+    await conn.query('UPDATE debate_topic SET audit_status = ? WHERE id = ?', [
+      audit_status,
+      topicId,
+    ])
 
     await conn.query(
       'INSERT INTO debate_audit_log (topic_id, auditor_id, audit_status, reason) VALUES (?, ?, ?, ?)',
-      [topicId, auditorId, audit_status, reason || null]
+      [topicId, auditorId, audit_status, reason || null],
     )
 
     await conn.commit()
@@ -209,7 +222,7 @@ export const joinTopic = async (req, res) => {
 
     const [topic] = await conn.query(
       'SELECT pro_limit, con_limit, status, template_id FROM debate_topic WHERE id = ? AND audit_status = 1',
-      [topicId]
+      [topicId],
     )
     if (!topic.length) {
       await conn.rollback()
@@ -223,7 +236,7 @@ export const joinTopic = async (req, res) => {
 
     const [existing] = await conn.query(
       'SELECT id FROM debate_participant WHERE topic_id = ? AND user_id = ? FOR UPDATE',
-      [topicId, userId]
+      [topicId, userId],
     )
     if (existing.length) {
       await conn.rollback()
@@ -232,7 +245,7 @@ export const joinTopic = async (req, res) => {
 
     const [count] = await conn.query(
       'SELECT COUNT(*) as cnt FROM debate_participant WHERE topic_id = ? AND stance = ? FOR UPDATE',
-      [topicId, stance]
+      [topicId, stance],
     )
     const limit = stance === 1 ? topic[0].pro_limit : topic[0].con_limit
     if (count[0].cnt >= limit) {
@@ -242,27 +255,27 @@ export const joinTopic = async (req, res) => {
 
     await conn.query(
       'INSERT INTO debate_participant (topic_id, user_id, stance) VALUES (?, ?, ?)',
-      [topicId, userId, stance]
+      [topicId, userId, stance],
     )
 
     // 如果是模板辩论，检查双方是否已到齐
     if (topic[0].template_id) {
       const [participants] = await conn.query(
         'SELECT stance, user_id FROM debate_participant WHERE topic_id = ? AND stance IN (0, 1)',
-        [topicId]
+        [topicId],
       )
-      const proUser = participants.find(p => p.stance === 1)
-      const conUser = participants.find(p => p.stance === 0)
+      const proUser = participants.find((p) => p.stance === 1)
+      const conUser = participants.find((p) => p.stance === 0)
 
       if (proUser && conUser) {
-        const [templates] = await conn.query(
-          'SELECT config FROM debate_template WHERE id = ?',
-          [topic[0].template_id]
-        )
+        const [templates] = await conn.query('SELECT config FROM debate_template WHERE id = ?', [
+          topic[0].template_id,
+        ])
         if (templates.length) {
-          const config = typeof templates[0].config === 'string'
-            ? JSON.parse(templates[0].config)
-            : templates[0].config
+          const config =
+            typeof templates[0].config === 'string'
+              ? JSON.parse(templates[0].config)
+              : templates[0].config
           await createRounds(conn, parseInt(topicId), config, proUser.user_id, conUser.user_id)
         }
       }
@@ -299,7 +312,7 @@ export const createSpeech = async (req, res) => {
 
     const [topic] = await conn.query(
       'SELECT status FROM debate_topic WHERE id = ? AND audit_status = 1 FOR UPDATE',
-      [topicId]
+      [topicId],
     )
     if (!topic.length) {
       await conn.rollback()
@@ -312,7 +325,7 @@ export const createSpeech = async (req, res) => {
 
     const [participant] = await conn.query(
       'SELECT stance FROM debate_participant WHERE topic_id = ? AND user_id = ?',
-      [topicId, userId]
+      [topicId, userId],
     )
     if (!participant.length) {
       await conn.rollback()
@@ -321,7 +334,7 @@ export const createSpeech = async (req, res) => {
 
     const [lastSpeech] = await conn.query(
       'SELECT created_at FROM debate_speech WHERE topic_id = ? AND user_id = ? AND role = 1 ORDER BY created_at DESC LIMIT 1 FOR UPDATE',
-      [topicId, userId]
+      [topicId, userId],
     )
     if (lastSpeech.length) {
       const cooldown = 60
@@ -334,7 +347,7 @@ export const createSpeech = async (req, res) => {
 
     const [result] = await conn.query(
       'INSERT INTO debate_speech (topic_id, user_id, role, content, stance, word_count, audit_status) VALUES (?, ?, 1, ?, ?, ?, 1)',
-      [topicId, userId, content, participant[0].stance, wordCount]
+      [topicId, userId, content, participant[0].stance, wordCount],
     )
 
     await conn.commit()
@@ -372,7 +385,7 @@ export const createAudienceSpeech = async (req, res) => {
 
     const [topic] = await conn.query(
       'SELECT status FROM debate_topic WHERE id = ? AND audit_status = 1 FOR UPDATE',
-      [topicId]
+      [topicId],
     )
     if (!topic.length) {
       await conn.rollback()
@@ -385,7 +398,7 @@ export const createAudienceSpeech = async (req, res) => {
 
     const [participant] = await conn.query(
       'SELECT id FROM debate_participant WHERE topic_id = ? AND user_id = ?',
-      [topicId, userId]
+      [topicId, userId],
     )
     if (participant.length) {
       await conn.rollback()
@@ -394,7 +407,7 @@ export const createAudienceSpeech = async (req, res) => {
 
     const [result] = await conn.query(
       'INSERT INTO debate_speech (topic_id, user_id, role, content, stance, word_count, audit_status) VALUES (?, ?, 2, ?, ?, ?, 1)',
-      [topicId, userId, content, stance, wordCount]
+      [topicId, userId, content, stance, wordCount],
     )
 
     await conn.commit()
@@ -417,12 +430,17 @@ export const auditSpeech = async (req, res) => {
       return res.json(error('审核状态无效', 400))
     }
 
-    await pool.query(
-      'UPDATE debate_speech SET audit_status = ? WHERE id = ?',
-      [audit_status, speechId]
-    )
+    await pool.query('UPDATE debate_speech SET audit_status = ? WHERE id = ?', [
+      audit_status,
+      speechId,
+    ])
 
-    res.json(success({ reason: audit_status === 2 ? reason : null }, audit_status === 1 ? '审核通过' : '已驳回'))
+    res.json(
+      success(
+        { reason: audit_status === 2 ? reason : null },
+        audit_status === 1 ? '审核通过' : '已驳回',
+      ),
+    )
   } catch (err) {
     console.error('审核发言失败:', err)
     res.json(error('审核发言失败', 500))
@@ -439,7 +457,7 @@ export const closeTopic = async (req, res) => {
 
     const [topic] = await conn.query(
       'SELECT publisher_id, status FROM debate_topic WHERE id = ? FOR UPDATE',
-      [topicId]
+      [topicId],
     )
     if (!topic.length) {
       await conn.rollback()
@@ -482,7 +500,7 @@ export const voteTopic = async (req, res) => {
 
     const [topic] = await conn.query(
       'SELECT status FROM debate_topic WHERE id = ? AND audit_status = 1 FOR UPDATE',
-      [topicId]
+      [topicId],
     )
     if (!topic.length) {
       await conn.rollback()
@@ -495,7 +513,7 @@ export const voteTopic = async (req, res) => {
 
     const [voted] = await conn.query(
       'SELECT id FROM debate_user_vote WHERE topic_id = ? AND user_id = ? FOR UPDATE',
-      [topicId, userId]
+      [topicId, userId],
     )
     if (voted.length) {
       await conn.rollback()
@@ -503,10 +521,16 @@ export const voteTopic = async (req, res) => {
     }
 
     const [users] = await conn.query('SELECT level FROM user WHERE id = ?', [userId])
-    const weight = users.length ? (VOTE_WEIGHT_MAP[users[0].level] || 1.0) : 1.0
+    const weight = users.length ? VOTE_WEIGHT_MAP[users[0].level] || 1.0 : 1.0
 
-    await conn.query('INSERT INTO debate_vote (topic_id, user_id, stance, weight) VALUES (?, ?, ?, ?)', [topicId, userId, stance, weight])
-    await conn.query('INSERT INTO debate_user_vote (topic_id, user_id) VALUES (?, ?)', [topicId, userId])
+    await conn.query(
+      'INSERT INTO debate_vote (topic_id, user_id, stance, weight) VALUES (?, ?, ?, ?)',
+      [topicId, userId, stance, weight],
+    )
+    await conn.query('INSERT INTO debate_user_vote (topic_id, user_id) VALUES (?, ?)', [
+      topicId,
+      userId,
+    ])
 
     await conn.commit()
     res.json(success(null, '投票成功'))
@@ -529,7 +553,7 @@ export const settleTopic = async (req, res) => {
 
     const [topic] = await conn.query(
       'SELECT publisher_id, status, post_id FROM debate_topic WHERE id = ? FOR UPDATE',
-      [topicId]
+      [topicId],
     )
     if (!topic.length) {
       await conn.rollback()
@@ -544,7 +568,10 @@ export const settleTopic = async (req, res) => {
       return res.json(error('辩论未结束', 400))
     }
 
-    const [existing] = await conn.query('SELECT id FROM debate_result WHERE topic_id = ? FOR UPDATE', [topicId])
+    const [existing] = await conn.query(
+      'SELECT id FROM debate_result WHERE topic_id = ? FOR UPDATE',
+      [topicId],
+    )
     if (existing.length) {
       await conn.rollback()
       return res.json(error('已结算', 400))
@@ -552,30 +579,33 @@ export const settleTopic = async (req, res) => {
 
     const [votes] = await conn.query(
       'SELECT stance, SUM(weight) as weighted_votes FROM debate_vote WHERE topic_id = ? GROUP BY stance',
-      [topicId]
+      [topicId],
     )
 
-    let proVotes = 0, conVotes = 0
-    votes.forEach(v => {
+    let proVotes = 0,
+      conVotes = 0
+    votes.forEach((v) => {
       if (v.stance === 1) proVotes = parseFloat(v.weighted_votes) || 0
       if (v.stance === 2) conVotes = parseFloat(v.weighted_votes) || 0
     })
 
-    const winner = proVotes > conVotes ? 1 : (conVotes > proVotes ? 2 : null)
-    const summary = winner ? `${winner === 1 ? '正方' : '反方'}获胜，加权票数 ${winner === 1 ? proVotes.toFixed(1) : conVotes.toFixed(1)}:${winner === 1 ? conVotes.toFixed(1) : proVotes.toFixed(1)}` : '平票，等待管理员评审'
+    const winner = proVotes > conVotes ? 1 : conVotes > proVotes ? 2 : null
+    const summary = winner
+      ? `${winner === 1 ? '正方' : '反方'}获胜，加权票数 ${winner === 1 ? proVotes.toFixed(1) : conVotes.toFixed(1)}:${winner === 1 ? conVotes.toFixed(1) : proVotes.toFixed(1)}`
+      : '平票，等待管理员评审'
 
     await conn.query(
       'INSERT INTO debate_result (topic_id, pro_votes, con_votes, winner, summary) VALUES (?, ?, ?, ?, ?)',
-      [topicId, proVotes, conVotes, winner, summary]
+      [topicId, proVotes, conVotes, winner, summary],
     )
 
     // 如果辩论关联了帖子，回写质量分
     if (topic[0].post_id) {
       const debateScore = Math.min(Math.max((proVotes + conVotes) / 10, 0), 10)
-      await conn.query(
-        'UPDATE post SET quality_score = COALESCE(quality_score, ?) WHERE id = ?',
-        [Math.round(debateScore * 100) / 100, topic[0].post_id]
-      )
+      await conn.query('UPDATE post SET quality_score = COALESCE(quality_score, ?) WHERE id = ?', [
+        Math.round(debateScore * 100) / 100,
+        topic[0].post_id,
+      ])
     }
 
     await conn.commit()
@@ -614,7 +644,7 @@ export const searchTopics = async (req, res) => {
     const sortMap = {
       time: 'dt.created_at DESC',
       heat: 'heat DESC',
-      participants: 'participant_count DESC'
+      participants: 'participant_count DESC',
     }
     const orderBy = sortMap[sort] || sortMap.time
 
@@ -627,20 +657,22 @@ export const searchTopics = async (req, res) => {
        WHERE ${whereClause}
        ORDER BY ${orderBy}
        LIMIT ? OFFSET ?`,
-      [...params, parseInt(pageSize), offset]
+      [...params, parseInt(pageSize), offset],
     )
 
     const [countResult] = await pool.query(
       `SELECT COUNT(*) as total FROM debate_topic dt LEFT JOIN user u ON dt.publisher_id = u.id WHERE ${whereClause}`,
-      params
+      params,
     )
 
-    res.json(success({
-      list: rows,
-      total: countResult[0].total,
-      page: parseInt(page),
-      pageSize: parseInt(pageSize)
-    }))
+    res.json(
+      success({
+        list: rows,
+        total: countResult[0].total,
+        page: parseInt(page),
+        pageSize: parseInt(pageSize),
+      }),
+    )
   } catch (err) {
     console.error('搜索失败:', err)
     res.json(error('搜索失败', 500))
@@ -668,7 +700,7 @@ export const getSpeeches = async (req, res) => {
        LEFT JOIN user u ON ds.user_id = u.id
        WHERE ${whereClause}
        ORDER BY ds.created_at ASC`,
-      params
+      params,
     )
 
     res.json(success(speeches))
@@ -687,7 +719,7 @@ export const getTopicDetail = async (req, res) => {
        FROM debate_topic dt
        LEFT JOIN user u ON dt.publisher_id = u.id
        WHERE dt.id = ? AND dt.audit_status = 1`,
-      [topicId]
+      [topicId],
     )
 
     if (!topic.length) {
@@ -699,18 +731,20 @@ export const getTopicDetail = async (req, res) => {
        FROM debate_participant dp
        LEFT JOIN user u ON dp.user_id = u.id
        WHERE dp.topic_id = ?`,
-      [topicId]
+      [topicId],
     )
 
-    const proCount = participants.filter(p => p.stance === 1).length
-    const conCount = participants.filter(p => p.stance === 2).length
+    const proCount = participants.filter((p) => p.stance === 1).length
+    const conCount = participants.filter((p) => p.stance === 2).length
 
-    res.json(success({
-      ...topic[0],
-      participants,
-      proCount,
-      conCount
-    }))
+    res.json(
+      success({
+        ...topic[0],
+        participants,
+        proCount,
+        conCount,
+      }),
+    )
   } catch (err) {
     console.error('获取话题详情失败:', err)
     res.json(error('获取话题详情失败', 500))
@@ -721,10 +755,7 @@ export const getTopicResult = async (req, res) => {
   try {
     const { topicId } = req.params
 
-    const [result] = await pool.query(
-      `SELECT * FROM debate_result WHERE topic_id = ?`,
-      [topicId]
-    )
+    const [result] = await pool.query(`SELECT * FROM debate_result WHERE topic_id = ?`, [topicId])
 
     if (!result.length) {
       return res.json(error('辩论结果不存在', 404))
@@ -772,7 +803,7 @@ async function addToReviewQueue(conn, content, userId, topicId, auditResults) {
       auditReason,
       JSON.stringify(violations),
       confidence,
-      'pending'
-    ]
+      'pending',
+    ],
   )
 }

@@ -7,7 +7,7 @@ const RULE_VOTE_WEIGHT = {
   [USER_LEVEL.BEGINNER]: 1.0,
   [USER_LEVEL.INTERMEDIATE]: 1.2,
   [USER_LEVEL.ADVANCED]: 1.5,
-  [USER_LEVEL.ADMIN]: 2.0
+  [USER_LEVEL.ADMIN]: 2.0,
 }
 
 export const createRuleDebate = async (req, res) => {
@@ -34,7 +34,7 @@ export const createRuleDebate = async (req, res) => {
     const [result] = await conn.query(
       `INSERT INTO rule_debate (title, current_status, modify_content, initiator_id, status, duration)
        VALUES (?, ?, ?, ?, 'pending', ?)`,
-      [title, currentStatus, modifyContent, userId, durationNum]
+      [title, currentStatus, modifyContent, userId, durationNum],
     )
 
     await conn.commit()
@@ -59,7 +59,7 @@ export const getRuleDebates = async (req, res) => {
        LEFT JOIN user u ON rd.initiator_id = u.id
        LEFT JOIN rule_debate_participant rdp ON rd.id = rdp.debate_id
        GROUP BY rd.id
-       ORDER BY rd.created_at DESC`
+       ORDER BY rd.created_at DESC`,
     )
 
     res.json(success(debates))
@@ -84,7 +84,7 @@ export const joinRuleDebate = async (req, res) => {
 
     const [debate] = await conn.query(
       'SELECT status, created_at, duration FROM rule_debate WHERE id = ? FOR UPDATE',
-      [debateId]
+      [debateId],
     )
 
     if (!debate.length) {
@@ -97,7 +97,8 @@ export const joinRuleDebate = async (req, res) => {
       return res.json(error('辩论已结束，无法加入', 400))
     }
 
-    const expireTime = new Date(debate[0].created_at).getTime() + debate[0].duration * 24 * 60 * 60 * 1000
+    const expireTime =
+      new Date(debate[0].created_at).getTime() + debate[0].duration * 24 * 60 * 60 * 1000
     if (Date.now() > expireTime) {
       await conn.rollback()
       return res.json(error('辩论已过期', 400))
@@ -105,7 +106,7 @@ export const joinRuleDebate = async (req, res) => {
 
     const [existing] = await conn.query(
       'SELECT id FROM rule_debate_participant WHERE debate_id = ? AND user_id = ? FOR UPDATE',
-      [debateId, userId]
+      [debateId, userId],
     )
 
     if (existing.length > 0) {
@@ -115,7 +116,7 @@ export const joinRuleDebate = async (req, res) => {
 
     await conn.query(
       'INSERT INTO rule_debate_participant (debate_id, user_id, stance) VALUES (?, ?, ?)',
-      [debateId, userId, stance]
+      [debateId, userId, stance],
     )
 
     await conn.commit()
@@ -149,7 +150,7 @@ export const createRuleDebateSpeech = async (req, res) => {
 
     const [debate] = await conn.query(
       'SELECT status, created_at, duration FROM rule_debate WHERE id = ? FOR UPDATE',
-      [debateId]
+      [debateId],
     )
 
     if (!debate.length) {
@@ -162,7 +163,8 @@ export const createRuleDebateSpeech = async (req, res) => {
       return res.json(error('辩论已结束', 400))
     }
 
-    const expireTime = new Date(debate[0].created_at).getTime() + debate[0].duration * 24 * 60 * 60 * 1000
+    const expireTime =
+      new Date(debate[0].created_at).getTime() + debate[0].duration * 24 * 60 * 60 * 1000
     if (Date.now() > expireTime) {
       await conn.rollback()
       return res.json(error('辩论已过期', 400))
@@ -170,7 +172,7 @@ export const createRuleDebateSpeech = async (req, res) => {
 
     const [participants] = await conn.query(
       'SELECT id FROM rule_debate_participant WHERE debate_id = ? AND user_id = ?',
-      [debateId, userId]
+      [debateId, userId],
     )
 
     if (participants.length === 0) {
@@ -181,14 +183,16 @@ export const createRuleDebateSpeech = async (req, res) => {
     const [result] = await conn.query(
       `INSERT INTO rule_debate_speech (debate_id, user_id, content, audit_status)
        VALUES (?, ?, ?, 0)`,
-      [debateId, userId, content]
+      [debateId, userId, content],
     )
 
     await conn.commit()
-    res.json(success({
-      id: result.insertId,
-      message: '发言已提交，等待审核'
-    }))
+    res.json(
+      success({
+        id: result.insertId,
+        message: '发言已提交，等待审核',
+      }),
+    )
   } catch (err) {
     await conn.rollback().catch(() => {})
     console.error('提交规则辩论发言失败:', err)
@@ -213,7 +217,7 @@ export const voteRuleDebate = async (req, res) => {
 
     const [debate] = await conn.query(
       'SELECT status, created_at, duration FROM rule_debate WHERE id = ? FOR UPDATE',
-      [debateId]
+      [debateId],
     )
 
     if (!debate.length) {
@@ -226,7 +230,8 @@ export const voteRuleDebate = async (req, res) => {
       return res.json(error('辩论已结束，无法投票', 400))
     }
 
-    const expireTime = new Date(debate[0].created_at).getTime() + debate[0].duration * 24 * 60 * 60 * 1000
+    const expireTime =
+      new Date(debate[0].created_at).getTime() + debate[0].duration * 24 * 60 * 60 * 1000
     if (Date.now() > expireTime) {
       await conn.rollback()
       return res.json(error('辩论已过期', 400))
@@ -234,7 +239,7 @@ export const voteRuleDebate = async (req, res) => {
 
     const [existing] = await conn.query(
       'SELECT id FROM rule_debate_vote WHERE debate_id = ? AND user_id = ? FOR UPDATE',
-      [debateId, userId]
+      [debateId, userId],
     )
 
     if (existing.length > 0) {
@@ -248,7 +253,7 @@ export const voteRuleDebate = async (req, res) => {
 
     await conn.query(
       'INSERT INTO rule_debate_vote (debate_id, user_id, vote, weight) VALUES (?, ?, ?, ?)',
-      [debateId, userId, vote, weight]
+      [debateId, userId, vote, weight],
     )
 
     await conn.commit()
@@ -275,10 +280,9 @@ export const settleRuleDebate = async (req, res) => {
 
     await conn.beginTransaction()
 
-    const [debate] = await conn.query(
-      'SELECT status FROM rule_debate WHERE id = ? FOR UPDATE',
-      [debateId]
-    )
+    const [debate] = await conn.query('SELECT status FROM rule_debate WHERE id = ? FOR UPDATE', [
+      debateId,
+    ])
 
     if (!debate.length) {
       await conn.rollback()
@@ -292,7 +296,7 @@ export const settleRuleDebate = async (req, res) => {
 
     const [existingResult] = await conn.query(
       'SELECT id FROM rule_debate_result WHERE debate_id = ? FOR UPDATE',
-      [debateId]
+      [debateId],
     )
 
     if (existingResult.length > 0) {
@@ -305,27 +309,24 @@ export const settleRuleDebate = async (req, res) => {
        FROM rule_debate_vote
        WHERE debate_id = ?
        GROUP BY vote`,
-      [debateId]
+      [debateId],
     )
 
-    const supportWeight = parseFloat(votes.find(v => v.vote === 'support')?.total_weight) || 0
-    const opposeWeight = parseFloat(votes.find(v => v.vote === 'oppose')?.total_weight) || 0
+    const supportWeight = parseFloat(votes.find((v) => v.vote === 'support')?.total_weight) || 0
+    const opposeWeight = parseFloat(votes.find((v) => v.vote === 'oppose')?.total_weight) || 0
     const voteDecision = supportWeight > opposeWeight ? 'approved' : 'rejected'
 
     const finalDecision = voteDecision === adminDecision ? adminDecision : 'rejected'
-    
+
     const conclusion = `投票结果：支持${supportWeight.toFixed(1)}，反对${opposeWeight.toFixed(1)}。管理员决定：${adminDecision === 'approved' ? '通过' : '拒绝'}。最终判定：${finalDecision === 'approved' ? '通过修改' : '拒绝修改'}。`
 
     await conn.query(
       `INSERT INTO rule_debate_result (debate_id, final_decision, support_weight, oppose_weight, admin_decision, conclusion)
        VALUES (?, ?, ?, ?, ?, ?)`,
-      [debateId, finalDecision, supportWeight, opposeWeight, adminDecision, conclusion]
+      [debateId, finalDecision, supportWeight, opposeWeight, adminDecision, conclusion],
     )
 
-    await conn.query(
-      'UPDATE rule_debate SET status = ? WHERE id = ?',
-      [finalDecision, debateId]
-    )
+    await conn.query('UPDATE rule_debate SET status = ? WHERE id = ?', [finalDecision, debateId])
 
     await conn.commit()
     res.json(success({ finalDecision, conclusion }))
@@ -347,7 +348,7 @@ export const getRuleDebateDetail = async (req, res) => {
        FROM rule_debate rd
        LEFT JOIN user u ON rd.initiator_id = u.id
        WHERE rd.id = ?`,
-      [debateId]
+      [debateId],
     )
 
     if (!debates.length) {
@@ -359,18 +360,20 @@ export const getRuleDebateDetail = async (req, res) => {
        FROM rule_debate_participant rdp
        LEFT JOIN user u ON rdp.user_id = u.id
        WHERE rdp.debate_id = ?`,
-      [debateId]
+      [debateId],
     )
 
-    const supportCount = participants.filter(p => p.stance === 'support').length
-    const opposeCount = participants.filter(p => p.stance === 'oppose').length
+    const supportCount = participants.filter((p) => p.stance === 'support').length
+    const opposeCount = participants.filter((p) => p.stance === 'oppose').length
 
-    res.json(success({
-      ...debates[0],
-      participants,
-      supportCount,
-      opposeCount
-    }))
+    res.json(
+      success({
+        ...debates[0],
+        participants,
+        supportCount,
+        opposeCount,
+      }),
+    )
   } catch (err) {
     console.error('获取规则辩论详情失败:', err)
     res.json(error('获取规则辩论详情失败', 500))
@@ -401,7 +404,7 @@ export const getRuleDebateSpeeches = async (req, res) => {
        LEFT JOIN rule_debate_participant rdp ON rds.debate_id = rdp.debate_id AND rds.user_id = rdp.user_id
        WHERE ${whereClause}
        ORDER BY rds.created_at ASC`,
-      params
+      params,
     )
 
     res.json(success(speeches))
@@ -415,10 +418,9 @@ export const getRuleDebateResult = async (req, res) => {
   try {
     const { debateId } = req.params
 
-    const [results] = await pool.query(
-      `SELECT * FROM rule_debate_result WHERE debate_id = ?`,
-      [debateId]
-    )
+    const [results] = await pool.query(`SELECT * FROM rule_debate_result WHERE debate_id = ?`, [
+      debateId,
+    ])
 
     if (!results.length) {
       return res.json(error('辩论结果不存在', 404))

@@ -8,20 +8,16 @@ const mockReqRes = (overrides = {}) => {
     json(data) {
       this._json = data
       return this
-    }
+    },
   }
   return { req, res }
 }
 
 // 只测试不需要数据库连接即能验证的函数
 // createTopic / joinTopic 等需要 DB 交互的函数由集成测试覆盖
-import {
-  searchTopics,
-  getCategories
-} from '../controllers/debateController.js'
+import { searchTopics, getCategories } from '../controllers/debateController.js'
 
 describe('debateController - searchTopics', () => {
-
   it('returns error gracefully when DB is not available', async () => {
     const { req, res } = mockReqRes({ query: { keyword: 'AI' } })
     await searchTopics(req, res)
@@ -43,7 +39,6 @@ describe('debateController - searchTopics', () => {
 })
 
 describe('debateController - getCategories', () => {
-
   it('returns error gracefully when DB is not available', async () => {
     const { req, res } = mockReqRes()
     await getCategories(req, res)

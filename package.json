@@ -13,14 +13,14 @@
   },
   "lint-staged": {
     "frontend/src/**/*.{js,vue}": [
-      "npx eslint --fix --max-warnings 100 --config frontend/.eslintrc.cjs",
+      "frontend/node_modules/.bin/eslint --fix --max-warnings 100 --config frontend/.eslintrc.cjs",
       "npx prettier --write"
     ],
     "frontend/src/**/*.css": [
       "npx prettier --write"
     ],
     "backend/src/**/*.js": [
-      "npx eslint --fix --max-warnings 100 --config backend/.eslintrc.cjs",
+      "backend/node_modules/.bin/eslint --fix --max-warnings 100 --config backend/.eslintrc.cjs",
       "npx prettier --write"
     ]
   },

@@ -89,10 +89,7 @@ export const resetPassword = async (req, res) => {
         [account, account],
       )
       if (users.length > 0) {
-        await pool.query('UPDATE user SET password = ? WHERE id = ?', [
-          hashedPassword,
-          users[0].id,
-        ])
+        await pool.query('UPDATE user SET password = ? WHERE id = ?', [hashedPassword, users[0].id])
       }
     } catch (dbErr) {
       console.log('数据库未连接，模拟密码更新成功')

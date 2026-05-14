@@ -1,5 +1,11 @@
 import express from 'express'
-import { sendResetCode, resetPassword, enable2FA, send2FACode, verify2FA } from '../controllers/securityController.js'
+import {
+  sendResetCode,
+  resetPassword,
+  enable2FA,
+  send2FACode,
+  verify2FA,
+} from '../controllers/securityController.js'
 
 const router = express.Router()
 
